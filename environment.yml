@@ -1,0 +1,31 @@
+name: rpowbe
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+  - pyg
+  - pip
+dependencies:
+  - python=3.10.0
+  - mkl < 2022
+  - pandas
+  - numpy
+  - tqdm
+  - tensorflow
+  - tensorflow-probability
+  - pyg-lib
+  - pygod
+  - pytorch
+  - torchvision 
+  - torchaudio 
+  - pyg 
+  - pytorch-sparse 
+  - jupyterlab
+  - yfinance
+  - matplotlib
+  - openpyxl
+  - ipywidgets
+  - cvxopt
+  - pip:
+    - torch-geometric
+    - torch-geometric-temporal
