@@ -6,7 +6,7 @@ import json
 from tqdm import tqdm
 
 from models.MD import MD
-from data.NewETFs import NewETFs
+from data.CRSPSimple import CRSPSimple
 from utils.dataset_utils import create_rolling_window_ts
 from loss_functions.SharpeLoss import SharpeLoss
 
@@ -15,6 +15,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="md")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
+parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
+parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
 
 if __name__ == "__main__":
 
@@ -26,13 +28,15 @@ if __name__ == "__main__":
     num_timesteps_out = args.num_timesteps_out
     fix_start = False
     drop_last = True
+    use_sample_data = args.use_sample_data
+    all_years = args.all_years
 
     # relevant paths
     source_path = os.path.dirname(__file__)
     inputs_path = os.path.join(source_path, "data", "inputs")
 
     # prepare dataset
-    loader = NewETFs(use_last_data=True, use_first_50_etfs=True)
+    loader = CRSPSimple(use_sample_data=use_sample_data, all_years=all_years)
     prices = loader.prices.T
     returns = loader.returns.T
     features = loader.features
