@@ -6,16 +6,12 @@ class Volatility(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, prices, weights, ascent=True, annualize=True):
-        
-        # asset returns
-        asset_returns = torch.diff(torch.log(prices), dim=1)
+        self.name = "Std(R)"
 
-        # portfolio returns
-        portfolio_returns = torch.mul(weights, asset_returns)
-
+    def forward(self, returns, ascent=False, annualize=True):
+    
         # portfolio realized volatility
-        volatility = torch.std(portfolio_returns) * (np.sqrt(252) if annualize else 1)
+        volatility = torch.std(returns) * (np.sqrt(252) if annualize else 1) * 100
 
         return volatility * (-1 if ascent else 1)
     

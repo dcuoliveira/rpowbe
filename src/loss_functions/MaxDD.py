@@ -6,26 +6,24 @@ class MaxDD(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, prices, weights, ascent=True, annualize=True):
+        self.name = "MaxDD"
+
+    def forward(self, returns, ascent=False):
         
-        # asset returns
-        asset_returns = torch.diff(torch.log(prices), dim=1)
-
-        # portfolio returns
-        portfolio_returns = torch.mul(weights, asset_returns)
-        portfolio_returns = portfolio_returns.reshape(portfolio_returns.shape[0] * portfolio_returns.shape[1], portfolio_returns.shape[2])
-
         # cummualitive portfolio returns
-        cummulative_portfolio_returns = torch.cumprod(1 + portfolio_returns.sum(axis=1), dim=0)
+        cummulative_portfolio_returns = torch.exp(torch.cumsum(returns, dim=0))
 
         # rolling max value
         rolling_max = torch.cummax(cummulative_portfolio_returns, dim=0)[0]
+
+        # ensure the drawdown is zero for the first element
+        rolling_max[0] = 1.0
 
         # drawdown
         drawdown = (cummulative_portfolio_returns - rolling_max) / rolling_max
 
         # max. drawdown
-        max_drawdown = torch.min(drawdown)
+        max_drawdown = torch.min(drawdown) * 100
 
         return max_drawdown * (-1 if ascent else 1)
     

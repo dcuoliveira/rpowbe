@@ -6,24 +6,20 @@ class Sortino(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, prices, weights, ascent=True, annualize=True):
+        self.name = "Sortino"
+
+    def forward(self, returns, ascent=False, annualize=True):
         
-        # asset returns
-        asset_returns = torch.diff(torch.log(prices), dim=1)
-
-        # portfolio returns
-        portfolio_returns = torch.mul(weights, asset_returns)
-
         # portfolio downside vol
-        downside_rets = portfolio_returns.clone()
+        downside_rets = returns.clone()
         downside_rets[downside_rets >= 0] = np.nan
         downside_rets = downside_rets.reshape(-1)
         downside_vol = torch.std(downside_rets[~downside_rets.isnan()])
 
         # portfolio sharpe
-        sharpe_ratio = (torch.mean(portfolio_returns) / downside_vol) * (np.sqrt(252) if annualize else 1)
+        sortino_ratio = (torch.mean(returns) / downside_vol) * (np.sqrt(252) if annualize else 1)
 
-        return sharpe_ratio * (-1 if ascent else 1)
+        return sortino_ratio * (-1 if ascent else 1)
     
 DEBUG = False
 

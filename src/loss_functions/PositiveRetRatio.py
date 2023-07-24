@@ -6,16 +6,12 @@ class PositiveRetRatio(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, prices, weights, ascent=True):
-        
-        # asset returns
-        asset_returns = torch.diff(torch.log(prices), dim=1)
+        self.name = "% Positive Ret."
 
-        # portfolio returns
-        portfolio_returns = torch.mul(weights, asset_returns)
-
+    def forward(self, returns, ascent=False):
+    
         # portfolio ratio of days with positive return
-        positive_ret_ratio = (portfolio_returns > 0).sum() / (portfolio_returns.shape[0] * portfolio_returns.shape[1] * portfolio_returns.shape[2])
+        positive_ret_ratio = (returns > 0).sum() / (returns.shape[0])
 
         return positive_ret_ratio * (-1 if ascent else 1)
     

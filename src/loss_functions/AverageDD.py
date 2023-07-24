@@ -2,30 +2,28 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-class AvgDD(nn.Module):
+class AverageDD(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, prices, weights, ascent=True, annualize=True):
+        self.name = "AvgDD"
+
+    def forward(self, returns, ascent=False):
         
-        # asset returns
-        asset_returns = torch.diff(torch.log(prices), dim=1)
-
-        # portfolio returns
-        portfolio_returns = torch.mul(weights, asset_returns)
-        portfolio_returns = portfolio_returns.reshape(portfolio_returns.shape[0] * portfolio_returns.shape[1], portfolio_returns.shape[2])
-
         # cummualitive portfolio returns
-        cummulative_portfolio_returns = torch.cumprod(1 + portfolio_returns.sum(axis=1), dim=0)
+        cummulative_portfolio_returns = torch.exp(torch.cumsum(returns, dim=0))
 
         # rolling max value
         rolling_max = torch.cummax(cummulative_portfolio_returns, dim=0)[0]
+
+        # ensure the drawdown is zero for the first element
+        rolling_max[0] = 1.0
 
         # drawdown
         drawdown = (cummulative_portfolio_returns - rolling_max) / rolling_max
 
         # max. drawdown
-        avg_drawdown = torch.mean(drawdown)
+        avg_drawdown = torch.mean(drawdown) * 100
 
         return avg_drawdown * (-1 if ascent else 1)
     
