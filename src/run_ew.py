@@ -11,8 +11,8 @@ from utils.conn_data import save_result_in_blocks
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--model_name', type=str, help='model name to be used for saving the model', default="ew")
-parser.add_argument('--use_sample_data', type=bool, help='use sample stocks data', default=False)
-parser.add_argument('--all_years', type=bool, help='use all years to build dataset', default=True)
+parser.add_argument('--use_sample_data', type=bool, help='use sample stocks data', default=True)
+parser.add_argument('--all_years', type=bool, help='use all years to build dataset', default=False)
 
 if __name__ == "__main__":
 
