@@ -29,7 +29,10 @@ class MD(Estimators):
 
     def forward(self,
                 returns: torch.Tensor,
-                num_timesteps_out: int) -> torch.Tensor:
+                num_timesteps_out: int,
+                long_only: bool) -> torch.Tensor:
+
+        N = returns.shape[1]
 
         # covariance estimator
         if self.covariance_estimator == "mle":
@@ -37,16 +40,20 @@ class MD(Estimators):
         else:
             raise NotImplementedError
         
-        N = returns.shape[1]
-
         self.cov_t = cov_t.numpy()
         self.vol_t = torch.sqrt(torch.diag(cov_t))[:, None].numpy()
 
-        # constraint 1 : \sum w_i = 1
-        constraints = ({'type': 'eq', 'fun': lambda w: np.sum(w) - 1})
-
-        # constraint 2 : w_i \in [0, 1]
-        bounds = [(0, 1) for _ in range(N)]
+        if long_only:
+            constraints = [
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # The weights sum to one
+            ]
+            bounds = [(0, None) for _ in range(N)]
+        else:
+            constraints = [
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1}  # the sum of absolute weights is one
+            ]
+            bounds = None
 
         # initial guess for the weights (equal distribution)
         w0 = np.repeat(1 / N, N)

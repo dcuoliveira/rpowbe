@@ -1,7 +1,7 @@
 import torch
 import numpy as np
-import cvxopt as opt
-from cvxopt import solvers
+import scipy.optimize as opt
+
 
 from estimators.Estimators import Estimators
 
@@ -33,15 +33,13 @@ class MVO(Estimators):
     def forward(self,
                 returns: torch.Tensor,
                 num_timesteps_out: int,
-                verbose: bool=True) -> torch.Tensor:
+                long_only: bool=True) -> torch.Tensor:
         
-        solvers.options['show_progress'] = not verbose
-
-        n = returns.shape[1]
+        N = returns.shape[1]
 
         # mean estimator
         if self.mean_estimator == "mle":
-            mean_t = self.MLEMean(returns)
+            mu_t = self.MLEMean(returns)
         else:
             raise NotImplementedError
 
@@ -51,25 +49,28 @@ class MVO(Estimators):
         else:
             raise NotImplementedError
 
-        # constraint 1: w_i >= 0 <=> -w_i <= 0, for all i
-        c1 = torch.eye(n) * -1
-        h = torch.zeros((n, 1))
+        # define the objective function (negative Sharpe Ratio)
+        def objective(weights):
+            return -np.dot(mu_t, weights) / np.sqrt(np.dot(weights, np.dot(cov_t, weights)))
 
-        # constraint 2: \sum w_i = 1
-        c2 = torch.ones((1, n))
-        b = 1.0
+        if long_only:
+            constraints = [
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # The weights sum to one
+            ]
+            bounds = [(0, None) for _ in range(N)]
+        else:
+            constraints = [
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1}  # the sum of absolute weights is one
+            ]
+            bounds = None
 
-        # convert to cvxopt matrices
-        P = opt.matrix(cov_t.numpy().astype(np.double))
-        q = opt.matrix(mean_t.numpy().astype(np.double))
-        G = opt.matrix(c1.numpy().astype(np.double))
-        h = opt.matrix(h.numpy().astype(np.double)) 
-        A = opt.matrix(c2.numpy().astype(np.double))
-        b = opt.matrix(b)
+        # initial guess for the weights
+        x0 = np.ones(N) / N
 
-        # solve the problem
-        opt_output = solvers.qp(P=(self.risk_aversion * P), q=(-1 * q), G=G, h=h, A=A, b=b) # minimizes the objective
-        wt = torch.tensor(np.array(opt_output["x"])).T.repeat(num_timesteps_out, 1)
+        # Perform the optimization
+        opt_output = opt.minimize(objective, x0, constraints=constraints, bounds=bounds, method='SLSQP')
+        wt = torch.tensor(np.array(opt_output.x)).T.repeat(num_timesteps_out, 1)
 
         return wt
     
