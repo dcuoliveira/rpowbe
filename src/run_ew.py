@@ -6,27 +6,26 @@ import json
 
 from models.EW import EW
 from data.CRSPSimple import CRSPSimple
+from utils.conn_data import save_result_in_blocks
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="ew")
-parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
-parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
+parser.add_argument('--model_name', type=str, help='model name to be used for saving the model', default="ew")
+parser.add_argument('--use_sample_data', type=bool, help='use sample stocks data', default=False)
+parser.add_argument('--all_years', type=bool, help='use all years to build dataset', default=True)
 
 if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    model_name = args.model_name
-    use_sample_data = args.use_sample_data
-    all_years = args.all_years
+    print(args.use_sample_data, args.all_years)
 
     # relevant paths
     source_path = os.path.dirname(__file__)
     inputs_path = os.path.join(source_path, "data", "inputs")
 
     # prepare dataset
-    loader = CRSPSimple(use_sample_data=use_sample_data, all_years=all_years)
+    loader = CRSPSimple(use_sample_data=args.use_sample_data, all_years=args.all_years)
     prices = loader.prices.T
     returns = loader.returns.T
     features = loader.features
@@ -57,23 +56,10 @@ if __name__ == "__main__":
         "summary": summary_df
 
         }
-
+    
     output_path = os.path.join(os.path.dirname(__file__),
-                                    "data",
-                                    "outputs",
-                                    model_name)
-
-    # check if dir exists
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-
-    # save args
-    args_dict = vars(args)  
-    with open(os.path.join(output_path, 'args.json'), 'w') as fp:
-        json.dump(args_dict, fp)
-
-    # save results
-    output_name = "{model_name}.pt".format(model_name=model_name)
-    torch.save(results, os.path.join(output_path, output_name))
-
-    summary_df.to_csv(os.path.join(output_path, "summary.csv"), index=False)
+                                "data",
+                                "outputs",
+                                "{}_lo".format(args.model_name))
+    
+    save_result_in_blocks(results=results, args=args, path=output_path)

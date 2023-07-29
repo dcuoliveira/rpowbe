@@ -9,14 +9,16 @@ from models.MVO import MVO
 from data.CRSPSimple import CRSPSimple
 from utils.dataset_utils import create_rolling_window_ts
 from loss_functions.SharpeLoss import SharpeLoss
+from utils.conn_data import save_result_in_blocks
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="mvo")
-parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252)
+parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 3)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
-parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
-parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
+parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=False)
+parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=True)
+parser.add_argument('-lo', '--long_only', type=bool, help='use all years to build dataset', default=False)
 
 if __name__ == "__main__":
 
@@ -30,6 +32,11 @@ if __name__ == "__main__":
     drop_last = True
     use_sample_data = args.use_sample_data
     all_years = args.all_years
+    long_only = args.long_only
+
+    print(use_sample_data, all_years)
+
+    model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
     
     # relevant paths
     source_path = os.path.dirname(__file__)
@@ -64,7 +71,7 @@ if __name__ == "__main__":
         X_t = X_steps[step, :, :]
         prices_t1 = prices_steps[step, :, :]
 
-        weights_t1 = model.forward(returns=X_t, num_timesteps_out=num_timesteps_out)
+        weights_t1 = model.forward(returns=X_t, num_timesteps_out=num_timesteps_out, long_only=long_only)
         test_weights[step, :, :] = weights_t1
 
         loss, returns_t1 = lossfn(weights=weights_t1, prices=prices_t1)
@@ -73,7 +80,6 @@ if __name__ == "__main__":
         test_loss[step, :] = loss.item()
 
         pbar.set_description("Steps: %d, Test sharpe : %1.5f" % (step, loss.item()))
-    print("Avg sharpe : %1.5f" % (torch.mean(test_loss).item()))
 
     if test_weights.dim() == 3:
         weights = test_weights.reshape(test_weights.shape[0] * test_weights.shape[1], test_weights.shape[2])
@@ -110,16 +116,9 @@ if __name__ == "__main__":
                                     "outputs",
                                     model_name)
 
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-
-    # save args
-    args_dict = vars(args)  
-    with open(os.path.join(output_path, 'args.json'), 'w') as fp:
-        json.dump(args_dict, fp)
-
-    # save results
-    output_name = "{model_name}.pt".format(model_name=model_name)
-    torch.save(results, os.path.join(output_path, output_name))
-
-    summary_df.to_csv(os.path.join(output_path, "summary.csv"), index=False)
+    output_path = os.path.join(os.path.dirname(__file__),
+                                "data",
+                                "outputs",
+                                model_name)
+    
+    save_result_in_blocks(results=results, args=args, path=output_path)
