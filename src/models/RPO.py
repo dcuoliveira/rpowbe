@@ -5,17 +5,18 @@ import picos as pc
 import scipy.optimize as opt
 
 from estimators.Estimators import Estimators
+from utils.diagnostics import compute_summary_statistics
 
 class RPO(Estimators):
     def __init__(self,
                  risk_aversion: float=1.0,
-                 uncertainty: float=1.0,
                  omega_estimator: str="mle",
                  mean_estimator: str="mle",
                  covariance_estimator: str="mle") -> None:
         """"
         This function impements the Robust Portofolio Optimization with quadratic uncertainty set.
-
+        Implementation done using: C. Yin, R. Perchet & F. Soupé (2021) A practical guide to robust portfolio
+                                      optimization, Quantitative Finance, 21:6, 911-928, DOI: 10.1080/14697688.2020.1849780
         Args:
             risk_aversion (float): risk aversion parameter. Defaults to 0.5. 
                                    The risk aversion parameter is a scalar that controls the trade-off between risk and return.
@@ -33,7 +34,6 @@ class RPO(Estimators):
         super().__init__()
         
         self.risk_aversion = risk_aversion
-        self.uncertainty = uncertainty
         self.omega_estimator = omega_estimator
         self.mean_estimator = mean_estimator
         self.covariance_estimator = covariance_estimator
@@ -45,6 +45,7 @@ class RPO(Estimators):
                 verbose: bool=True) -> torch.Tensor:
 
         N = returns.shape[1]
+        T = returns.shape[0]
 
         # mean estimator
         if self.mean_estimator == "mle":
@@ -60,14 +61,18 @@ class RPO(Estimators):
         
         # uncertainty set estimator
         if self.omega_estimator == "mle":
-            omega_t = torch.eye(N)
+            omega_t = self.MLEUncertainty(T,cov_t)
         else:
             raise NotImplementedError
+        # uncertainty (\kappa) estimator
+        sharpe_ratios = compute_summary_statistics(returns)
+        uncertainty = sharpe_ratios["Sharpe"]/2 
+
         # max w^{\top}\bar{u} - (\kappa)*\sqrt(w^{\top} \Omega w) - \frac{\lambda}{2}w^{\top} \Sigma w
         #print(pc.available_solvers())
         # Problem
         def objective(weights):
-            return np.dot(mean_t, weights) - self.uncertainty*np.sqrt(np.dot(weights,np.dot(omega_t,weights))) - (self.risk_aversion/2)*np.dot(weights,np.dot(cov_t,weights))
+            return np.dot(mean_t, weights) - uncertainty*np.sqrt(np.dot(weights,np.dot(omega_t,weights))) - (self.risk_aversion/2)*np.dot(weights,np.dot(cov_t,weights))
 
         if long_only:
             constraints = [
