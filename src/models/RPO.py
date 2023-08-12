@@ -1,7 +1,5 @@
 import torch
 import numpy as np
-# uses optimization methods from CVXOPT
-import picos as pc
 import scipy.optimize as opt
 
 from estimators.Estimators import Estimators
