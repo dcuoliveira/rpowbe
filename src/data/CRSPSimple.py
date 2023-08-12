@@ -5,9 +5,6 @@ import pandas as pd
 import glob
 from tqdm import tqdm
 
-from torch_geometric.utils import dense_to_sparse
-from torch_geometric_temporal.signal import StaticGraphTemporalSignal
-
 class CRSPSimple(object):
     """
     This class implements the dataset used in Zhang, Zohren, and Roberts (2021)
