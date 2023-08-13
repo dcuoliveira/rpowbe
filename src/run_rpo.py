@@ -9,6 +9,7 @@ from models.RPO import RPO
 from data.CRSPSimple import CRSPSimple
 from utils.dataset_utils import create_rolling_window_ts
 from loss_functions.SharpeLoss import SharpeLoss
+from utils.conn_data import save_result_in_blocks
 
 parser = argparse.ArgumentParser()
 
@@ -18,6 +19,7 @@ parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the l
 parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
 parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
 parser.add_argument('-lo', '--long_only', type=bool, help='use all years to build dataset', default=False)
+parser.add_argument('-uae', '--uncertainty_aversion_estimator', type=str, help='name of the uncertainty aversion estimator to be used', default=False)
 
 if __name__ == "__main__":
 
@@ -32,9 +34,21 @@ if __name__ == "__main__":
     use_sample_data = args.use_sample_data
     all_years = args.all_years
     long_only = args.long_only
-    
+    uncertainty_aversion_estimator = args.uncertainty_aversion_estimator
 
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
+
+    # uncertainty aversion estimator tag
+    if uncertainty_aversion_estimator == "yin-etal-2022":
+        uae_tag = "y2022"
+    elif uncertainty_aversion_estimator == "ceria-stubbs-2006":
+        uae_tag = "cs2006"
+    else:
+        raise Exception("uncertainty_aversion_estimator not recognized")    
+    
+    # add tag to name
+    model_name = "{model_name}_{uae_tag}".format(model_name=model_name, uae_tag=uae_tag)
+
     # relevant paths
     source_path = os.path.dirname(__file__)
     inputs_path = os.path.join(source_path, "data", "inputs")
@@ -54,7 +68,10 @@ if __name__ == "__main__":
                                                      drop_last=drop_last)
 
     # (1) call model
-    model = RPO()
+    model = RPO(omega_estimator="mle",
+                mean_estimator="mle",
+                covariance_estimator="mle",
+                uncertainty_aversion_estimator=uncertainty_aversion_estimator)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()
@@ -108,22 +125,13 @@ if __name__ == "__main__":
         "summary": summary_df
 
         }
-
+    
     output_path = os.path.join(os.path.dirname(__file__),
-                                    "data",
-                                    "outputs",
-                                    model_name)
-
+                               "data",
+                               "outputs",
+                               args.model_name)
+    
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-
-    # save args
-    args_dict = vars(args)  
-    with open(os.path.join(output_path, 'args.json'), 'w') as fp:
-        json.dump(args_dict, fp)
-
-    # save results
-    output_name = "{model_name}.pt".format(model_name=model_name)
-    torch.save(results, os.path.join(output_path, output_name))
-
-    summary_df.to_csv(os.path.join(output_path, "summary.csv"), index=False)
+    
+    save_result_in_blocks(results=results, args=args, path=output_path)
