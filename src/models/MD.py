@@ -22,8 +22,8 @@ class MD(Estimators):
 
     def objective(self, weights):
    
-        portfolio_volatility = np.sqrt(weights.T @ self.cov_t @ weights)
-        weighted_volatilities = weights.T @ self.vol_t
+        portfolio_volatility = np.sqrt(np.dot(weights, np.dot(self.cov_t, weights)))
+        weighted_volatilities = np.dot(weights.T, self.vol_t)
         diversification_ratio = - weighted_volatilities / portfolio_volatility
         return diversification_ratio
 
@@ -53,7 +53,7 @@ class MD(Estimators):
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
                 {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1}  # the sum of absolute weights is one
             ]
-            bounds = None
+            bounds = [(-1, 1) for _ in range(N)]
 
         # initial guess for the weights (equal distribution)
         w0 = np.repeat(1 / N, N)

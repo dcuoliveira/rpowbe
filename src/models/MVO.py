@@ -30,6 +30,11 @@ class MVO(Estimators):
         self.mean_estimator = mean_estimator
         self.covariance_estimator = covariance_estimator
 
+    def objective(self,
+                  weights):
+        
+        return -(np.dot(self.mu_t, weights) + ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights))))
+
     def forward(self,
                 returns: torch.Tensor,
                 num_timesteps_out: int,
@@ -39,23 +44,19 @@ class MVO(Estimators):
 
         # mean estimator
         if self.mean_estimator == "mle":
-            mu_t = self.MLEMean(returns)
+            self.mu_t = self.MLEMean(returns)
         else:
             raise NotImplementedError
 
         # covariance estimator
         if self.covariance_estimator == "mle":
-            cov_t = self.MLECovariance(returns)
+            self.cov_t = self.MLECovariance(returns)
         else:
             raise NotImplementedError
 
-        # define the objective function (negative Sharpe Ratio)
-        def objective(weights):
-            return -np.dot(mu_t, weights) / np.sqrt(np.dot(weights, np.dot(cov_t, weights)))
-
         if long_only:
             constraints = [
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # The weights sum to one
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
             ]
             bounds = [(0, None) for _ in range(N)]
         else:
@@ -63,13 +64,13 @@ class MVO(Estimators):
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
                 {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1}  # the sum of absolute weights is one
             ]
-            bounds = None
+            bounds = [(-1, 1) for _ in range(N)]
 
         # initial guess for the weights
         x0 = np.ones(N) / N
 
-        # Perform the optimization
-        opt_output = opt.minimize(objective, x0, constraints=constraints, bounds=bounds, method='SLSQP')
+        # perform the optimization
+        opt_output = opt.minimize(self.objective, x0, constraints=constraints, bounds=bounds, method='SLSQP')
         wt = torch.tensor(np.array(opt_output.x)).T.repeat(num_timesteps_out, 1)
 
         return wt
