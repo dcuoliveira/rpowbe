@@ -18,7 +18,7 @@ parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lo
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
 parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
 parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
-parser.add_argument('-lo', '--long_only', type=bool, help='use all years to build dataset', default=False)
+parser.add_argument('-lo', '--long_only', type=bool, help='consider long only constraint on the optimization', default=False)
 
 if __name__ == "__main__":
 
@@ -34,9 +34,10 @@ if __name__ == "__main__":
     all_years = args.all_years
     long_only = args.long_only
 
-    print(use_sample_data, all_years)
+    print(use_sample_data, all_years, long_only)
 
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
+    model_name = "{}_sample".format(model_name) if args.use_sample_data else model_name
 
     # relevant paths
     source_path = os.path.dirname(__file__)
@@ -110,11 +111,11 @@ if __name__ == "__main__":
         "summary": summary_df
 
         }
-    
+
     output_path = os.path.join(os.path.dirname(__file__),
                                "data",
                                "outputs",
-                               args.model_name)
+                               model_name)
     
     if not os.path.exists(output_path):
         os.makedirs(output_path)
