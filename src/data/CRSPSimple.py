@@ -5,12 +5,11 @@ import pandas as pd
 import glob
 from tqdm import tqdm
 
+from data.metadata import crsp_stocks
+
 class CRSPSimple(object):
     """
-    This class implements the dataset used in Zhang, Zohren, and Roberts (2021)
-    https://arxiv.org/abs/2005.13665 in to torch geomatric data loader format.
-    The data consists of daily observatios of four etf prices and returns 
-    concatenated together, from January 2000 to February 2023.
+
     
     """
     
@@ -33,11 +32,6 @@ class CRSPSimple(object):
     def _read_data(self,
                    fields: list,
                    years: list):
-        
-        if self.all_years:
-            years = os.listdir(os.path.join(self.inputs_path, "crsp"))
-            years = [val for val in years if val != ".DS_Store"]
-            years.sort()
 
         if self.use_sample_data:
     
@@ -46,10 +40,14 @@ class CRSPSimple(object):
             crsp_df["date"] = pd.to_datetime(crsp_df["date"])
             crsp_df.set_index("date", inplace=True)
         else:
+            if self.all_years:
+                years = os.listdir(os.path.join(self.inputs_path, "US_CRSP_NYSE"))
+                years = [val for val in years if val != ".DS_Store"]
+                years.sort()
 
             crsp = []
             for y in tqdm(years, total=len(years), desc="Loading All CRSP Data"):
-                files = glob.glob(os.path.join(self.inputs_path , "crsp", y, "*.csv.gz"))
+                files = glob.glob(os.path.join(self.inputs_path , "US_CRSP_NYSE", y, "*.csv.gz"))
 
                 for f in files:
                     tmp_df = pd.read_csv(f,
@@ -64,15 +62,25 @@ class CRSPSimple(object):
 
                     crsp.append(pivot_tmp_df)
             crsp_df = pd.concat(crsp, axis=0)
+            
+            # dataset processing 1
+            ## sort index
+            crsp_df = crsp_df.sort_index()
 
-            crsp_df = crsp_df.sort_index().dropna(axis=1, how="any")
+            ## drop duplicates
+            crsp_df = crsp_df.loc[~crsp_df.index.duplicated(keep='first')]
+
+            ## resample (business days) and forward fill
+            crsp_df = crsp_df.resample("B").ffill()
+            
             crsp_df.index.name = "date"
 
             # check if file exists
             if not os.path.exists(os.path.join(self.inputs_path, "crsp_simple_sample.csv")):
-                crsp_df.iloc[:, 0:50].to_csv(os.path.join(self.inputs_path, "crsp_simple_sample.csv"))
+                crsp_df[crsp_stocks].to_csv(os.path.join(self.inputs_path, "crsp_simple_sample.csv"))
 
-        # compute returns and subset data
+        # dataset processing 2
+        ## compute returns and subset data
         returns = np.log(crsp_df).diff().dropna()
 
         # save indexes
