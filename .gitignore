@@ -1,7 +1,5 @@
 # data
-src/data/inputs/new_etfs/*
-src/data/outputs/*/*.pt
-src/data/outputs/*/*.csv
+src/data/inputs/US_CRSP_NYSE/*
 
 #vscode
 .DS_store
