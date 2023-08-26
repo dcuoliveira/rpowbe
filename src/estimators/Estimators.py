@@ -1,4 +1,5 @@
 import torch
+from estimators.BootstrapSampling import BootstrapSampling
 
 class Estimators:
     def __init__(self) -> None:
@@ -28,3 +29,38 @@ class Estimators:
         omega_t.diagonal().copy_(cov_t_diag)
 
         return omega_t
+    
+    # boot_method: bootstrap method to use
+    # Bsize: Block size to use (not necessary for model-based)
+    # rep: number of bootstrap samplings to get
+
+    def BootstrapMean(self,
+                      returns: torch.Tensor,
+                      boot_method: str = "circular",
+                      Bsize: int = 50,
+                      rep = 1000) -> torch.Tensor:
+        sampler = BootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize)
+        list_means = list()
+        for _ in range(rep):
+            boot_returns = sampler.sample()
+            boot_mean = self.MLEMean(boot_returns)
+            list_means.append(boot_mean)
+        # compute the overall bootstrap sample mean
+        smeans = torch.vstack(list_means)
+        mean = torch.mean(smeans,axis = 0)
+        return mean
+    
+    def BootstrapCovariance(self,
+                      returns: torch.Tensor,
+                      boot_method: str = "circular",
+                      Bsize: int = 50,
+                      rep = 1000) -> torch.Tensor:
+        sampler = BootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize)
+        list_covs = list()
+        for _ in range(rep):
+            boot_returns = sampler.sample()
+            list_covs.append(self.MLECovariance(boot_returns))
+        # compute the overall bootstrap sample mean
+        scov = torch.stack(list_covs)
+        mean_scov = torch.mean(scov,axis = 0)
+        return mean_scov

@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import scipy.optimize as opt
+from scipy.stats import chi2 # for ceria and Stubs
 
 from estimators.Estimators import Estimators
 from utils.diagnostics import compute_summary_statistics
@@ -69,7 +70,9 @@ class RPO(Estimators):
             sharpe_ratios = compute_summary_statistics(returns)
             uncertainty_aversion = sharpe_ratios["Sharpe"] / 2 
         elif self.uncertainty_aversion_estimator == "ceria-stubbs-2006":
-            raise NotImplementedError
+            # Cummulative chi-square function  
+            eta = 0.95 # Ceria-Stubbs do not comment on the value they used, hence I am setting 95%
+            uncertainty_aversion = chi2.ppf(1 - eta, df = N)
         else:
             raise NotImplementedError
 
