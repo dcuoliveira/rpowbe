@@ -34,12 +34,15 @@ class Estimators:
     # Bsize: Block size to use (not necessary for model-based)
     # rep: number of bootstrap samplings to get
 
+    # max_P and max_Q only used when boot_method = "model-based"
     def BootstrapMean(self,
                       returns: torch.Tensor,
                       boot_method: str = "circular",
                       Bsize: int = 50,
-                      rep = 1000) -> torch.Tensor:
-        sampler = BootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize)
+                      rep: int = 1000,
+                      max_P: int = 50,
+                      max_Q: int = 50) -> torch.Tensor:
+        sampler = BootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize,max_P=max_P,max_Q = max_Q)
         list_means = list()
         for _ in range(rep):
             boot_returns = sampler.sample()
@@ -50,12 +53,15 @@ class Estimators:
         mean = torch.mean(smeans,axis = 0)
         return mean
     
+    # max_P and max_Q only used when boot_method = "model-based"
     def BootstrapCovariance(self,
                       returns: torch.Tensor,
                       boot_method: str = "circular",
                       Bsize: int = 50,
-                      rep = 1000) -> torch.Tensor:
-        sampler = BootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize)
+                      rep: int = 1000,
+                      max_P: int = 50,
+                      max_Q: int = 50) -> torch.Tensor:
+        sampler = BootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize,max_P=max_P,max_Q = max_Q)
         list_covs = list()
         for _ in range(rep):
             boot_returns = sampler.sample()
