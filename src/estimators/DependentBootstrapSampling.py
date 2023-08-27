@@ -30,13 +30,13 @@ class DependentBootstrapSampling:
         """
         super().__init__()
         self.time_series = time_series
-        self.Bsize = Bsize # not used when "boot_method" is "mbb".
+        self.Bsize = Bsize # not used when "boot_method" is "rbb".
         self.boot_method = boot_method
         self.Blocks = None # set of blocks
-        self.Models = None # list of ARIMA models, only used when "boot_method" is "mbb".
-        self.errors = None # np.array of errors, only used when "boot_method" is "mbb".
+        self.Models = None # list of ARIMA models, only used when "boot_method" is "rbb".
+        self.errors = None # np.array of errors, only used when "boot_method" is "rbb".
         self.Ps = None # list of best order parameter (P) of ARIMA model corresponding to each model
-        if self.boot_method != "mbb": # if not "mbb" then it is model based
+        if self.boot_method != "rbb": # if not "rbb" then it is model based
             self.create_blocks()
         else:
             self.create_ARIMA_models(max_p = max_p, max_q = max_q)
@@ -44,20 +44,38 @@ class DependentBootstrapSampling:
     def sample(self) -> torch.Tensor:
         """"
         Method to generate a sampling according to the method.
+        Implemented methods are:
+        - Non-overlapping Block Bootstrap (nobb)
+        - Circular Block Bootstrap (cbb)
+        - Stationary Bootstrap (sb)
+        - Model-based / Residual-based Bootstrap (rbb)
 
         Returns:
             sampled_data (torch.Tensor): sampled data
         """
         if self.boot_method == "cbb":
-            
-            N = self.time_series.shape[1]
-            b = int(math.ceil(N/self.Bsize))
+
+            # N = self.time_series.shape[1]
+            N = self.time_series.shape[0]
+            b = int(math.ceil(N / self.Bsize))
             selected_blocks = random.choices(self.Blocks, k = b)
 
             sampled_data = torch.hstack(selected_blocks)
 
-            return sampled_data[:,:N]
-        elif self.boot_method == "mbb":
+            # return sampled_data[:, :N]
+            return sampled_data[:N, :]
+    
+        elif self.boot_method == "nobb":
+
+            N = self.time_series.shape[0]
+            b = int(math.ceil(N / self.Bsize))
+            selected_blocks = random.choices(self.Blocks, k = b)
+
+            sampled_data = torch.vstack(selected_blocks)
+
+            return sampled_data[:N, :]
+
+        elif self.boot_method == "rbb":
             
             N = self.time_series.shape[1]
             M = self.time_series.shape[0]
@@ -79,6 +97,7 @@ class DependentBootstrapSampling:
                 break
             
             sampled_data = torch.vstack(sampled_data)
+
             return sampled_data
     
     def create_blocks(self) -> None:
@@ -91,8 +110,27 @@ class DependentBootstrapSampling:
 
         if self.boot_method == "cbb":
             self.Blocks = self.create_circular_blocks()
+        elif self.boot_method == "nobb":
+            self.Blocks = self.create_non_overlapping_blocks()
         else:
             self.Blocks = None
+    
+    def create_non_overlapping_blocks(self) -> list:
+        """
+        Method to create the non-overlapping block sets.
+
+        Returns:
+            Block_sets (list): list of blocks
+        """
+
+        N = self.time_series.shape[0]
+
+        Block_sets = list()
+        for i in range(0, N, self.Bsize):
+            Block = self.time_series[(i+1):(i + self.Bsize), :]
+            Block_sets.append(Block)
+
+        return Block_sets
     
     def create_circular_blocks(self) -> list:
         """
@@ -104,7 +142,6 @@ class DependentBootstrapSampling:
 
         N = self.time_series.shape[1]
         dtime_series = torch.hstack((self.time_series.clone().detach(),self.time_series[:,:(self.Bsize + 1)].clone().detach()))
-        b = int(math.ceil(N/self.Bsize))
 
         Block_sets = list()
         for i in range(N):
@@ -119,7 +156,7 @@ class DependentBootstrapSampling:
                             max_q: int,
                             verbose: bool=False) -> None:
         """
-        Method to create the ARIMA models if "boot_method" is "mbb".
+        Method to create the ARIMA models if "boot_method" is "rbb".
 
         Args:
             max_p (int): maximum order of the AR(p) part of the ARIMA model.
