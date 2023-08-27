@@ -19,6 +19,8 @@ parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the l
 parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
 parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
 parser.add_argument('-lo', '--long_only', type=bool, help='use all years to build dataset', default=False)
+parser.add_argument('-meane', '--mean_estimator', type=str, help='name of the estimator to be used for the expected returns', default="cbb")
+parser.add_argument('-cove', '--covariance_estimator', type=str, help='name of the estimator to be used for the covariance of the returns', default="cbb")
 parser.add_argument('-uae', '--uncertainty_aversion_estimator', type=str, help='name of the uncertainty aversion estimator to be used', default="ceria-stubbs-2006")
 
 if __name__ == "__main__":
@@ -34,9 +36,17 @@ if __name__ == "__main__":
     use_sample_data = args.use_sample_data
     all_years = args.all_years
     long_only = args.long_only
+    mean_estimator = args.mean_estimator
+    covariance_estimator = args.covariance_estimator
     uncertainty_aversion_estimator = args.uncertainty_aversion_estimator
 
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
+
+    # add mean estimator tag to name
+    model_name = "{model_name}_{mean_estimator}".format(model_name=model_name, mean_estimator=mean_estimator)
+
+    # add covariance estimator tag to name
+    model_name = "{model_name}_{covariance_estimator}".format(model_name=model_name, covariance_estimator=covariance_estimator)
 
     # uncertainty aversion estimator tag
     if uncertainty_aversion_estimator == "yin-etal-2022":
@@ -46,7 +56,7 @@ if __name__ == "__main__":
     else:
         raise Exception("uncertainty_aversion_estimator not recognized")    
     
-    # add tag to name
+    # add uncertainty aversion tag to name
     model_name = "{model_name}_{uae_tag}".format(model_name=model_name, uae_tag=uae_tag)
 
     # relevant paths
@@ -69,8 +79,8 @@ if __name__ == "__main__":
 
     # (1) call model
     model = RPO(omega_estimator="mle",
-                mean_estimator="mle",
-                covariance_estimator="mle",
+                mean_estimator=mean_estimator,
+                covariance_estimator=covariance_estimator,
                 uncertainty_aversion_estimator=uncertainty_aversion_estimator)
 
     # (2) loss fucntion
