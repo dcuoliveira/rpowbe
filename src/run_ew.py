@@ -20,8 +20,6 @@ if __name__ == "__main__":
 
     print("Running script with the following parameters: model_name: {}, use_sample_data: {}, all_years: {}".format(args.model_name, args.use_sample_data, args.all_years))
 
-    print(args.use_sample_data, args.all_years)
-
     # relevant paths
     source_path = os.path.dirname(__file__)
     inputs_path = os.path.join(source_path, "data", "inputs")
