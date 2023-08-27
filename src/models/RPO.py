@@ -15,8 +15,8 @@ class RPO(Estimators):
                  uncertainty_aversion_estimator: str="yin-etal-2022") -> None:
         """"
         This function impements the Robust Portofolio Optimization with quadratic uncertainty set.
-        Implementation done using: C. Yin, R. Perchet & F. Soupé (2021) A practical guide to robust portfolio
-                                      optimization, Quantitative Finance, 21:6, 911-928, DOI: 10.1080/14697688.2020.1849780
+        Implementation done using: Yin, Perchet and Soupé (2021).
+
         Args:
             risk_aversion (float): risk aversion parameter. Defaults to 0.5. 
                                    The risk aversion parameter is a scalar that controls the trade-off between risk and return.
@@ -30,6 +30,7 @@ class RPO(Estimators):
         References:
         Markowitz, H. (1952) Portfolio Selection. The Journal of Finance.
         Ang, Andrew, (2014). Asset Management: A Systematic Approach to Factor Investing. Oxford University Press. 
+        C. Yin, R. Perchet & F. Soupé (2021) A practical guide to robust portfolio. Quantitative Finance.
         """
         super().__init__()
         
