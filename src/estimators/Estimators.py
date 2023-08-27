@@ -24,6 +24,7 @@ class Estimators:
     def MLEUncertainty(self,
                        T: float,
                        cov_t: torch.Tensor) -> torch.Tensor:
+        
         omega_t = torch.zeros_like(cov_t)
         cov_t_diag = torch.diagonal(cov_t, 0)/T
         omega_t.diagonal().copy_(cov_t_diag)
@@ -42,12 +43,19 @@ class Estimators:
                                rep: int = 1000,
                                max_P: int = 50,
                                max_Q: int = 50) -> torch.Tensor:
-        sampler = DependentBootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize,max_P=max_P,max_Q = max_Q)
+        
+        sampler = DependentBootstrapSampling(time_series=returns,
+                                             boot_method=boot_method,
+                                             Bsize=Bsize,
+                                             max_P=max_P,
+                                             max_Q=max_Q)
+        
         list_means = list()
         for _ in range(rep):
             boot_returns = sampler.sample()
             boot_mean = self.MLEMean(boot_returns)
             list_means.append(boot_mean)
+
         # compute the overall bootstrap sample mean
         smeans = torch.vstack(list_means)
         mean = torch.mean(smeans,axis = 0)
@@ -61,11 +69,18 @@ class Estimators:
                                      rep: int = 1000,
                                      max_P: int = 50,
                                      max_Q: int = 50) -> torch.Tensor:
-        sampler = DependentBootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize,max_P=max_P,max_Q = max_Q)
+        
+        sampler = DependentBootstrapSampling(time_series=returns,
+                                             boot_method=boot_method,
+                                             Bsize=Bsize,
+                                             max_P=max_P,
+                                             max_Q=max_Q)
+        
         list_covs = list()
         for _ in range(rep):
             boot_returns = sampler.sample()
             list_covs.append(self.MLECovariance(boot_returns))
+
         # compute the overall bootstrap sample mean
         scov = torch.stack(list_covs)
         mean_scov = torch.mean(scov,axis = 0)
