@@ -45,7 +45,7 @@ class RPO(Estimators):
                 num_timesteps_out: int,
                 long_only: bool=True) -> torch.Tensor:
 
-        N = returns.shape[1]
+        K = returns.shape[1]
         T = returns.shape[0]
 
         # mean estimator
@@ -97,7 +97,7 @@ class RPO(Estimators):
         elif self.uncertainty_aversion_estimator == "ceria-stubbs-2006":
             # Cummulative chi-square function  
             eta = 0.95 # Ceria-Stubbs do not comment on the value they used, hence I am setting 95%
-            uncertainty_aversion = chi2.ppf(1 - eta, df = N)
+            uncertainty_aversion = chi2.ppf(1 - eta, df = K)
         else:
             raise NotImplementedError
 
@@ -120,7 +120,7 @@ class RPO(Estimators):
             bounds = None
 
         # initial guess for the weights
-        x0 = np.ones(N) / N
+        x0 = np.ones(K) / K
 
         # Perform the optimization
         opt_output = opt.minimize(objective, x0, constraints=constraints, bounds=bounds, method='SLSQP')
