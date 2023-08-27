@@ -50,12 +50,36 @@ class RPO(Estimators):
         # mean estimator
         if self.mean_estimator == "mle":
             mean_t = self.MLEMean(returns)
+        elif self.mean_estimator == "cbb":
+            mean_t = self.DependentBootstrapMean(returns=returns,
+                                                 boot_method=self.mean_estimator,
+                                                 Bsize=50,
+                                                 rep=1000)
+        elif self.mean_estimator == "mbb":
+            mean_t = self.DependentBootstrapMean(returns=returns,
+                                                 boot_method=self.mean_estimator,
+                                                 Bsize=50,
+                                                 rep=1000,
+                                                 max_P=50,
+                                                 max_Q=50)
         else:
             raise NotImplementedError
 
         # covariance estimator
         if self.covariance_estimator == "mle":
             cov_t = self.MLECovariance(returns)
+        elif self.covariance_estimator == "cbb":
+            cov_t = self.DepenBootstrapCovariance(returns=returns,
+                                                  boot_method=self.covariance_estimator,
+                                                  Bsize=50,
+                                                  rep=1000)
+        elif self.covariance_estimator == "mbb":
+            cov_t = self.DepenBootstrapCovariance(returns=returns,
+                                                  boot_method=self.covariance_estimator,
+                                                  Bsize= 50,
+                                                  rep=1000,
+                                                  max_P= 50,
+                                                  max_Q= 50)
         else:
             raise NotImplementedError
         
