@@ -60,8 +60,8 @@ class RPO(Estimators):
                                                  boot_method=self.mean_estimator,
                                                  Bsize=50,
                                                  rep=1000,
-                                                 max_P=50,
-                                                 max_Q=50)
+                                                 max_p=50,
+                                                 max_q=50)
         else:
             raise NotImplementedError
 
@@ -78,8 +78,8 @@ class RPO(Estimators):
                                                   boot_method=self.covariance_estimator,
                                                   Bsize= 50,
                                                   rep=1000,
-                                                  max_P= 50,
-                                                  max_Q= 50)
+                                                  max_p= 50,
+                                                  max_q= 50)
         else:
             raise NotImplementedError
         
