@@ -58,7 +58,8 @@ class Estimators:
 
         # compute the overall bootstrap sample mean
         smeans = torch.vstack(list_means)
-        mean = torch.mean(smeans,axis = 0)
+        mean = torch.mean(smeans, axis = 0)
+
         return mean
     
     # max_P and max_Q only used when boot_method = "model-based"
@@ -84,4 +85,5 @@ class Estimators:
         # compute the overall bootstrap sample mean
         scov = torch.stack(list_covs)
         mean_scov = torch.mean(scov,axis = 0)
+        
         return mean_scov
