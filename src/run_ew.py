@@ -18,6 +18,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    print("Running script with the following parameters: model_name: {}, use_sample_data: {}, all_years: {}".format(args.model_name, args.use_sample_data, args.all_years))
+
     print(args.use_sample_data, args.all_years)
 
     # relevant paths

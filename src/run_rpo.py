@@ -27,6 +27,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    print("Running script with the following parameters: model_name: {}, use_sample_data: {}, all_years: {}, long_only: {}".format(args.model_name, args.use_sample_data, args.all_years, args.long_only))
+
     model_name = args.model_name
     train_ratio = 0.6
     num_timesteps_in = args.num_timesteps_in
