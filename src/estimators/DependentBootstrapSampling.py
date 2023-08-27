@@ -133,10 +133,11 @@ class DependentBootstrapSampling:
         N = self.time_series.shape[1] 
         M = self.time_series.shape[0]
         
+        # apply auto_arima for each time series
         errors = list()
         Models = list()
         Ps = list()
-        # apply auto_arima for each time series
+        Qs = list()
         for i in range(M):
             time_series_data = self.time_series[i,:]
             model = auto_arima(time_series_data,
@@ -153,14 +154,18 @@ class DependentBootstrapSampling:
                                error_action='ignore',  
                                suppress_warnings=True, 
                                stepwise=True)
-            Models.append(model)
             P, D, Q = model.order
+            
+            Models.append(model)
             Ps.append(P)
+            Qs.append(Q)
+
             # calculate the errors
             ierrors = list()
             for j in range(0,N-P):
                 error = time_series_data[j + P] - model.predict_in_sample(time_series_data[j:(j + P)])
                 ierrors.append(error)
+
             # center ierrors
             ierrors = torch.hstack(ierrors)
             ierrors = ierrors - torch.mean(ierrors)
@@ -170,6 +175,7 @@ class DependentBootstrapSampling:
         self.Models = Models
         self.errors = errors
         self.Ps = Ps
+        self.Qs = Qs
         
         if verbose:
             print("finished")
