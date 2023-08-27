@@ -110,7 +110,7 @@ class RPO(Estimators):
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # The weights sum to one
             ]
-            bounds = [(0, None) for _ in range(N)]
+            bounds = [(0, None) for _ in range(K)]
         else:
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
