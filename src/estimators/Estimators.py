@@ -99,7 +99,7 @@ class Estimators:
 
         # compute the overall bootstrap sample mean
         smeans = torch.vstack(list_means)
-        mean = torch.mean(smeans, axis = 0)
+        mean = torch.mean(smeans, axis=0)
 
         return mean
     
