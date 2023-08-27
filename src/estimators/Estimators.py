@@ -2,18 +2,39 @@ import torch
 from estimators.DependentBootstrapSampling import DependentBootstrapSampling
 
 class Estimators:
+    """
+    This class implements the estimators for all the unknown quantites we have on the optimization problems.
+
+    """
     def __init__(self) -> None:
         pass
 
     def MLEMean(self,
                 returns: torch.Tensor) -> torch.Tensor:
+        """
+        Method to compute the Maximum Likelihood estimtes of the mean of the returns.
+
+        Args:
+            returns (torch.tensor): returns tensor.
         
+        Returns:
+            mean_t (torch.tensor): MLE estimates for the mean of the returns.
+        """
         mean_t = torch.mean(returns, axis=0)
 
         return mean_t
     
     def MLECovariance(self,
                       returns: torch.Tensor) -> torch.Tensor:
+        """
+        Method to compute the Maximum Likelihood estimtes of the covariance of the returns.
+
+        Args:
+            returns (torch.tensor): returns tensor.
+
+        Returns:
+            cov_t (torch.tensor): MLE estimates for the covariance of the returns.
+        """
         
         T = returns.shape[0]
         mean_t = self.MLEMean(returns)
@@ -24,6 +45,17 @@ class Estimators:
     def MLEUncertainty(self,
                        T: float,
                        cov_t: torch.Tensor) -> torch.Tensor:
+        """
+        Method to compute the Maximum Likelihood estimtes of the uncertainty of the returns estimates.
+        This method is used for the Robust Portfolio Optimization problem.
+
+        Args:
+            T (float): number of time steps.
+            cov_t (torch.tensor): covariance tensor.
+
+        Returns:
+            omega_t (torch.tensor): MLE estimates for the uncertainty of the returns estimates.
+        """
         
         omega_t = torch.zeros_like(cov_t)
         cov_t_diag = torch.diagonal(cov_t, 0)/T
@@ -31,24 +63,33 @@ class Estimators:
 
         return omega_t
     
-    # boot_method: bootstrap method to use
-    # Bsize: Block size to use (not necessary for model-based)
-    # rep: number of bootstrap samplings to get
-
-    # max_P and max_Q only used when boot_method = "model-based"
     def DependentBootstrapMean(self,
                                returns: torch.Tensor,
                                boot_method: str = "cbb",
                                Bsize: int = 50,
                                rep: int = 1000,
-                               max_P: int = 50,
-                               max_Q: int = 50) -> torch.Tensor:
+                               max_p: int = 50,
+                               max_q: int = 50) -> torch.Tensor:
+        """ 
+        Method to compute the bootstrap mean of the returns.
+        
+        Args:
+            returns (torch.tensor): returns tensor.
+            boot_method (str): bootstrap method name to build the block set. For example, "cbb".
+            Bsize (int): block size to create the block set.
+            rep (int): number of bootstrap samplings to get.
+            max_p (int): maximum order of the AR(p) part of the ARIMA model. Only used when boot_method = "model-based".
+            max_q (int): maximum order of the MA(q) part of the ARIMA model. Only used when boot_method = "model-based".
+
+        Returns:
+            mean (torch.tensor): dependent bootstrap estimates for the mean of the returns.
+        """
         
         sampler = DependentBootstrapSampling(time_series=returns,
                                              boot_method=boot_method,
                                              Bsize=Bsize,
-                                             max_P=max_P,
-                                             max_Q=max_Q)
+                                             max_p=max_p,
+                                             max_q=max_q)
         
         list_means = list()
         for _ in range(rep):
@@ -62,20 +103,33 @@ class Estimators:
 
         return mean
     
-    # max_P and max_Q only used when boot_method = "model-based"
     def DependentBootstrapCovariance(self,
                                      returns: torch.Tensor,
                                      boot_method: str = "cbb",
                                      Bsize: int = 50,
                                      rep: int = 1000,
-                                     max_P: int = 50,
-                                     max_Q: int = 50) -> torch.Tensor:
+                                     max_p: int = 50,
+                                     max_q: int = 50) -> torch.Tensor:
+        """
+        Method to compute the bootstrap covariance of the returns.
+
+        Args:
+            returns (torch.tensor): returns tensor.
+            boot_method (str): bootstrap method name to build the block set. For example, "cbb".
+            Bsize (int): block size to create the block set.
+            rep (int): number of bootstrap samplings to get.
+            max_p (int): maximum order of the AR(p) part of the ARIMA model. Only used when boot_method = "model-based".
+            max_q (int): maximum order of the MA(q) part of the ARIMA model. Only used when boot_method = "model-based".
+
+        Returns:
+            cov (torch.tensor): dependent bootstrap estimates for the covariance of the returns.
+        """
         
         sampler = DependentBootstrapSampling(time_series=returns,
                                              boot_method=boot_method,
                                              Bsize=Bsize,
-                                             max_P=max_P,
-                                             max_Q=max_Q)
+                                             max_p=max_p,
+                                             max_q=max_q)
         
         list_covs = list()
         for _ in range(rep):
@@ -85,5 +139,5 @@ class Estimators:
         # compute the overall bootstrap sample mean
         scov = torch.stack(list_covs)
         mean_scov = torch.mean(scov,axis = 0)
-        
+
         return mean_scov
