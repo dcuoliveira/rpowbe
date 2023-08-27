@@ -19,7 +19,7 @@ class DependentBootstrapSampling:
         Args:
             time_series (np.array): time series array
             boot_method: bootstrap method name to build the block set. For example, "cbb"
-            Bsize: block size to creare the block set.
+            Bsize: block size to create the block set.
         """
         super().__init__()
         self.time_series = time_series
@@ -39,7 +39,7 @@ class DependentBootstrapSampling:
         if self.boot_method == "cbb":
             N = self.time_series.shape[1]
             b = int(math.ceil(N/self.Bsize))
-            selected_blocks = random.choices(self.Blocks,k = b)
+            selected_blocks = random.choices(self.Blocks, k = b)
 
             sampled_data = torch.hstack(selected_blocks)
 
@@ -69,7 +69,7 @@ class DependentBootstrapSampling:
         Method to create the block sets if "boot_method" specifies a block bootstrap method. In case that
         such variable is "mbb" then it will build the set of ARIMA models (for each time series) and
         """
-        if self.boot_method == "circular":
+        if self.boot_method == "cbb":
             self.Blocks = self.create_circular_blocks()
         else:
             self.Blocks = None
@@ -111,7 +111,7 @@ class DependentBootstrapSampling:
                       suppress_warnings=True, 
                       stepwise=True)
             Models.append(model)
-            P,D,Q = model.order
+            P, D, Q = model.order
             Ps.append(P)
             # calculate the errors
             ierrors = list()
@@ -122,11 +122,12 @@ class DependentBootstrapSampling:
             ierrors = torch.hstack(ierrors)
             ierrors = ierrors - torch.mean(ierrors)
             errors.append(ierrors)
+        
         # save
         self.Models = Models
         self.errors = errors
         self.Ps = Ps
-        #
+        
         print("finished")
         self.sample()
         
