@@ -55,15 +55,13 @@ class DependentBootstrapSampling:
         """
         if self.boot_method == "cbb":
 
-            # N = self.time_series.shape[1]
-            N = self.time_series.shape[0]
+            N = self.time_series.shape[1]
             b = int(math.ceil(N / self.Bsize))
             selected_blocks = random.choices(self.Blocks, k = b)
 
             sampled_data = torch.hstack(selected_blocks)
 
-            # return sampled_data[:, :N]
-            return sampled_data[:N, :]
+            return sampled_data[:, :N]
     
         elif self.boot_method == "nobb":
 
