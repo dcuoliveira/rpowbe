@@ -1,5 +1,5 @@
 import torch
-from estimators.DependentBootstrapSampling import BootstrapSampling
+from estimators.DependentBootstrapSampling import DependentBootstrapSampling
 
 class Estimators:
     def __init__(self) -> None:
@@ -35,14 +35,14 @@ class Estimators:
     # rep: number of bootstrap samplings to get
 
     # max_P and max_Q only used when boot_method = "model-based"
-    def BootstrapMean(self,
-                      returns: torch.Tensor,
-                      boot_method: str = "circular",
-                      Bsize: int = 50,
-                      rep: int = 1000,
-                      max_P: int = 50,
-                      max_Q: int = 50) -> torch.Tensor:
-        sampler = BootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize,max_P=max_P,max_Q = max_Q)
+    def DependentBootstrapMean(self,
+                               returns: torch.Tensor,
+                               boot_method: str = "cbb",
+                               Bsize: int = 50,
+                               rep: int = 1000,
+                               max_P: int = 50,
+                               max_Q: int = 50) -> torch.Tensor:
+        sampler = DependentBootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize,max_P=max_P,max_Q = max_Q)
         list_means = list()
         for _ in range(rep):
             boot_returns = sampler.sample()
@@ -54,14 +54,14 @@ class Estimators:
         return mean
     
     # max_P and max_Q only used when boot_method = "model-based"
-    def BootstrapCovariance(self,
-                      returns: torch.Tensor,
-                      boot_method: str = "circular",
-                      Bsize: int = 50,
-                      rep: int = 1000,
-                      max_P: int = 50,
-                      max_Q: int = 50) -> torch.Tensor:
-        sampler = BootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize,max_P=max_P,max_Q = max_Q)
+    def DependentBootstrapCovariance(self,
+                                     returns: torch.Tensor,
+                                     boot_method: str = "cbb",
+                                     Bsize: int = 50,
+                                     rep: int = 1000,
+                                     max_P: int = 50,
+                                     max_Q: int = 50) -> torch.Tensor:
+        sampler = DependentBootstrapSampling(time_series = returns,boot_method = boot_method,Bsize = Bsize,max_P=max_P,max_Q = max_Q)
         list_covs = list()
         for _ in range(rep):
             boot_returns = sampler.sample()
