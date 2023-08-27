@@ -33,24 +33,48 @@ class MVO(Estimators):
     def objective(self,
                   weights):
         
-        return -(np.dot(self.mu_t, weights) + ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights))))
+        return -(np.dot(self.K, weights) + ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights))))
 
     def forward(self,
                 returns: torch.Tensor,
                 num_timesteps_out: int,
                 long_only: bool=True) -> torch.Tensor:
         
-        N = returns.shape[1]
+        self.K = returns.shape[1]
 
         # mean estimator
         if self.mean_estimator == "mle":
-            self.mu_t = self.MLEMean(returns)
+            self.mean_t = self.MLEMean(returns)
+        elif (self.mean_estimator == "cbb") or (self.mean_estimator == "nobb"):
+            self.mean_t = self.DependentBootstrapMean(returns=returns,
+                                                 boot_method=self.mean_estimator,
+                                                 Bsize=50,
+                                                 rep=1000)
+        elif self.mean_estimator == "rbb":
+            self.mean_t = self.DependentBootstrapMean(returns=returns,
+                                                 boot_method=self.mean_estimator,
+                                                 Bsize=50,
+                                                 rep=1000,
+                                                 max_p=50,
+                                                 max_q=50)
         else:
             raise NotImplementedError
 
         # covariance estimator
         if self.covariance_estimator == "mle":
             self.cov_t = self.MLECovariance(returns)
+        elif (self.covariance_estimator == "cbb") or (self.covariance_estimator == "nobb"):
+            self.cov_t = self.DependentBootstrapCovariance(returns=returns,
+                                                      boot_method=self.covariance_estimator,
+                                                      Bsize=50,
+                                                      rep=1000)
+        elif self.covariance_estimator == "rbb":
+            self.cov_t = self.DepenBootstrapCovariance(returns=returns,
+                                                  boot_method=self.covariance_estimator,
+                                                  Bsize= 50,
+                                                  rep=1000,
+                                                  max_p= 50,
+                                                  max_q= 50)
         else:
             raise NotImplementedError
 
@@ -58,16 +82,16 @@ class MVO(Estimators):
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
             ]
-            bounds = [(0, None) for _ in range(N)]
+            bounds = [(0, None) for _ in range(self.K)]
         else:
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
                 {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1}  # the sum of absolute weights is one
             ]
-            bounds = [(-1, 1) for _ in range(N)]
+            bounds = [(-1, 1) for _ in range(self.K)]
 
         # initial guess for the weights
-        x0 = np.ones(N) / N
+        x0 = np.ones(self.K) / self.K
 
         # perform the optimization
         opt_output = opt.minimize(self.objective, x0, constraints=constraints, bounds=bounds, method='SLSQP')
