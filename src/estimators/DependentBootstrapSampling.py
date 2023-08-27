@@ -7,7 +7,7 @@ from pmdarima.arima import auto_arima
 # Class for Bootstrap Sampling
 # This class contains the different ways to generate time series samplings using bootstrap
 
-class BootstrapSampling:
+class DependentBootstrapSampling:
 
     def __init__(self,
                  time_series: torch.Tensor,

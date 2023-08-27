@@ -1,5 +1,5 @@
 import torch
-from estimators.BootstrapSampling import BootstrapSampling
+from estimators.DependentBootstrapSampling import BootstrapSampling
 
 class Estimators:
     def __init__(self) -> None:
