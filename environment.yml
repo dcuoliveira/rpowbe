@@ -21,3 +21,4 @@ dependencies:
   - openpyxl
   - ipywidgets
   - cvxopt
+  - pmdarima
