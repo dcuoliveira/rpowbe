@@ -40,7 +40,11 @@ if __name__ == "__main__":
     covariance_estimator = args.covariance_estimator
     uncertainty_aversion_estimator = args.uncertainty_aversion_estimator
 
+    # add tag for long only or long-short portfolios
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
+
+    # add tag for sample data
+    model_name = "{}_sample".format(model_name) if args.use_sample_data else model_name
 
     # add mean estimator tag to name
     model_name = "{model_name}_{mean_estimator}".format(model_name=model_name, mean_estimator=mean_estimator)

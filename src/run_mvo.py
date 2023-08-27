@@ -19,6 +19,8 @@ parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the l
 parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
 parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
 parser.add_argument('-lo', '--long_only', type=bool, help='consider long only constraint on the optimization', default=False)
+parser.add_argument('-meane', '--mean_estimator', type=str, help='name of the estimator to be used for the expected returns', default="mle")
+parser.add_argument('-cove', '--covariance_estimator', type=str, help='name of the estimator to be used for the covariance of the returns', default="mle")
 
 if __name__ == "__main__":
 
@@ -33,11 +35,20 @@ if __name__ == "__main__":
     use_sample_data = args.use_sample_data
     all_years = args.all_years
     long_only = args.long_only
+    mean_estimator = args.mean_estimator
+    covariance_estimator = args.covariance_estimator
 
-    print(use_sample_data, all_years, long_only)
-
+    # add tag for long only or long-short portfolios
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
+
+    # add tag for sample data
     model_name = "{}_sample".format(model_name) if args.use_sample_data else model_name
+
+    # add mean estimator tag to name
+    model_name = "{model_name}_{mean_estimator}".format(model_name=model_name, mean_estimator=mean_estimator)
+
+    # add covariance estimator tag to name
+    model_name = "{model_name}_{covariance_estimator}".format(model_name=model_name, covariance_estimator=covariance_estimator)
     
     # relevant paths
     source_path = os.path.dirname(__file__)
@@ -58,7 +69,8 @@ if __name__ == "__main__":
                                                      drop_last=drop_last)
 
     # (1) call model
-    model = MVO()
+    model = MVO(mean_estimator=mean_estimator,
+                covariance_estimator=covariance_estimator)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()
