@@ -71,17 +71,16 @@ if __name__ == "__main__":
 
     # prepare dataset
     loader = CRSPSimple(use_sample_data=use_sample_data, all_years=all_years)
-    prices = loader.prices.T
     returns = loader.returns.T
     features = loader.features
     features = features.reshape(features.shape[0], features.shape[1] * features.shape[2]).T  
 
-    X_steps, prices_steps = create_rolling_window_ts(features=features, 
-                                                     target=prices,
-                                                     num_timesteps_in=num_timesteps_in,
-                                                     num_timesteps_out=num_timesteps_out,
-                                                     fix_start=fix_start,
-                                                     drop_last=drop_last)
+    X_steps, returns_steps = create_rolling_window_ts(features=features, 
+                                                      target=returns,
+                                                      num_timesteps_in=num_timesteps_in,
+                                                      num_timesteps_out=num_timesteps_out,
+                                                      fix_start=fix_start,
+                                                      drop_last=drop_last)
 
     # (1) call model
     model = RPO(omega_estimator="mle",
@@ -99,12 +98,12 @@ if __name__ == "__main__":
     pbar = tqdm(range(X_steps.shape[0]), total=(X_steps.shape[0] + 1))
     for step in pbar:
         X_t = X_steps[step, :, :]
-        prices_t1 = prices_steps[step, :, :]
+        returns_t1 = returns_steps[step, :, :]
 
         weights_t1 = model.forward(returns=X_t, num_timesteps_out=num_timesteps_out)
         test_weights[step, :, :] = weights_t1
 
-        loss, returns_t1 = lossfn(weights=weights_t1, prices=prices_t1)
+        loss = lossfn(weights=weights_t1, returns=returns_t1)
         test_returns[step, :, :] = returns_t1
 
         test_loss[step, :] = loss.item()

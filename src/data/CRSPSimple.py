@@ -17,6 +17,7 @@ class CRSPSimple(object):
                  use_sample_data: bool = True,
                  fields: list=["close"],
                  all_years: bool = False,
+                 tickers: list = crsp_stocks,
                  years: list=["2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"]):
         super().__init__()
 
@@ -25,6 +26,7 @@ class CRSPSimple(object):
         self.fields = fields
         self.all_years = all_years
         self.years = years
+        self.tickers = tickers
 
         self._read_data(years=self.years, fields=self.fields)
 
@@ -56,7 +58,7 @@ class CRSPSimple(object):
                     tmp_df = tmp_df[["ticker"] + fields]
                     tmp_df["date"] = pd.to_datetime(f.split(os.sep)[-1].split(".")[0])
 
-                    pivot_tmp_df = tmp_df.pivot_table(index=["date"], columns=["ticker"], values=["close"])
+                    pivot_tmp_df = tmp_df.pivot_table(index=["date"], columns=["ticker"], values=fields)
                     pivot_tmp_df.index.name = None
                     pivot_tmp_df.columns = pivot_tmp_df.columns.droplevel(0)
 
@@ -70,42 +72,37 @@ class CRSPSimple(object):
             ## drop duplicates
             crsp_df = crsp_df.loc[~crsp_df.index.duplicated(keep='first')]
 
-            ## resample (business days) and forward fill
-            crsp_df = crsp_df.resample("B").ffill()
+            ## resample (business days) and fill with zero
+            crsp_df = crsp_df.resample("B").last().fillna(0)
             
             crsp_df.index.name = "date"
 
+            # subset data
+            if self.tickers is not None:
+                crsp_df = crsp_df[self.tickers]
+
             # check if file exists
             if not os.path.exists(os.path.join(self.inputs_path, "crsp_simple_sample.csv")):
-                crsp_df[crsp_stocks].to_csv(os.path.join(self.inputs_path, "crsp_simple_sample.csv"))
+                crsp_df.to_csv(os.path.join(self.inputs_path, "crsp_simple_sample.csv"))
 
         # dataset processing 2
         ## compute returns and subset data
-        returns = np.log(crsp_df).diff().dropna()
+        returns_df = crsp_df.dropna().copy()
 
         # save indexes
-        self.index = list(returns.index)
-        self.columns = list(returns.columns)
-
-        # subset all
-        idx = returns.index
-        returns_df = returns.loc[idx]
-        prices_df = crsp_df.loc[idx]
+        self.index = list(returns_df.index)
+        self.columns = list(returns_df.columns)
 
         # create tensor with (num_nodes, num_features_per_node, num_timesteps)
-        num_nodes = prices_df.shape[1]
+        num_nodes = returns_df.shape[1]
         num_features_per_node = len(fields)
-        num_timesteps = prices_df.shape[0]
+        num_timesteps = returns_df.shape[0]
 
         features = torch.zeros(num_nodes, num_features_per_node, num_timesteps)
-        prices = torch.zeros(num_nodes, num_timesteps)
         returns = torch.zeros(num_nodes, num_timesteps)
         for i in range(num_nodes):
             # features
             features[i, :, :] = torch.from_numpy(returns_df.loc[:, returns_df.columns[i]].values)
-
-            # target
-            prices[i, :] = torch.from_numpy(prices_df.loc[:, prices_df.columns[i]].values)
 
             # returns
             returns[i, :] = torch.from_numpy(returns_df.loc[:, returns_df.columns[i]].values)
@@ -116,13 +113,13 @@ class CRSPSimple(object):
         self.A = A
         self.features = features
         self.returns = returns
-        self.prices = prices
     
 DEBUG = False
 
 if __name__ == "__main__":
     if DEBUG:
         loader = CRSPSimple(use_sample_data=False,
-                            fields=["close"],
-                            all_years=True,
-                            years=["2011", "2012", "2013", "2014", "2015", "2016"])
+                            fields=["pvCLCL"],
+                            all_years=False,
+                            tickers=crsp_stocks,
+                            years=["2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"])

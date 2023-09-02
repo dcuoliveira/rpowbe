@@ -29,7 +29,6 @@ if __name__ == "__main__":
 
     # prepare dataset
     loader = CRSPSimple(use_sample_data=args.use_sample_data, all_years=args.all_years)
-    prices = loader.prices.T
     returns = loader.returns.T
     features = loader.features
     features = features.reshape(features.shape[0], features.shape[1] * features.shape[2]).T    
