@@ -52,6 +52,8 @@ if __name__ == "__main__":
     # add covariance estimator tag to name
     model_name = "{model_name}_{covariance_estimator}".format(model_name=model_name, covariance_estimator=covariance_estimator)
     
+    args.model_name = model_name
+
     # relevant paths
     source_path = os.path.dirname(__file__)
     inputs_path = os.path.join(source_path, "data", "inputs")
