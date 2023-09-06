@@ -1,7 +1,7 @@
+import glob as glob
 import os
 import pandas as pd
 import torch
-import glob as glob
 
 def aggregate_results(path):
     files = glob.glob(os.path.join(path, "*.csv"))
@@ -17,13 +17,13 @@ def aggregate_results(path):
 
     return all_summary_df.reset_index(drop=True)
 
-def timeseries_train_test_split_online(X, y, test_size):
-    T = (X.shape[0] - test_size)
+def timeseries_train_test_split_online(X, y, train_ratio):
+    train_size = int(X.shape[0] * train_ratio)
 
-    X_train = X[:T, :]
-    y_train = y[:T, :]
-    X_test = X[:T, :]
-    y_test = y[(T-1):, :]
+    X_train = X[:train_size, :]
+    y_train = y[:train_size, :]
+    X_test = X[train_size:, :]
+    y_test = y[(train_size-1):, :]
 
     return X_train, X_test, y_train, y_test
 
@@ -112,7 +112,7 @@ def create_rolling_window_ts(target, features, num_timesteps_in, num_timesteps_o
     window_features, window_target = [], []
     for i, j in indices:
         window_features.append(features[i:j, :])
-        window_target.append(target[(j - 1):(j + num_timesteps_out), :])
+        window_target.append(target[j:(j + num_timesteps_out), :])
 
     if drop_last:
         window_features = window_features[:-1]
