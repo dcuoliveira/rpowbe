@@ -29,6 +29,8 @@ class MVO(Estimators):
         self.risk_aversion = risk_aversion
         self.mean_estimator = mean_estimator
         self.covariance_estimator = covariance_estimator
+        self.means = list()
+        self.covs = list()
 
     def objective(self,
                   weights):
@@ -59,6 +61,7 @@ class MVO(Estimators):
                                                  max_q=50)
         else:
             raise NotImplementedError
+        self.means.append(self.mean_t)
 
         # covariance estimator
         if self.covariance_estimator == "mle":
@@ -77,6 +80,7 @@ class MVO(Estimators):
                                                   max_q= 50)
         else:
             raise NotImplementedError
+        self.covs.append(self.cov_t)
 
         if long_only:
             constraints = [

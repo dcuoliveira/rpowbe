@@ -19,6 +19,7 @@ class MD(Estimators):
         super().__init__()
         
         self.covariance_estimator = covariance_estimator
+        self.covs = list()
 
     def objective(self, weights):
    
@@ -51,6 +52,7 @@ class MD(Estimators):
                                                   max_q= 50)
         else:
             raise NotImplementedError
+        self.covs.append(cov_t)
         
         self.cov_t = cov_t.numpy()
         self.vol_t = torch.sqrt(torch.diag(cov_t))[:, None].numpy()

@@ -39,6 +39,8 @@ class RPO(Estimators):
         self.omega_estimator = omega_estimator
         self.mean_estimator = mean_estimator
         self.covariance_estimator = covariance_estimator
+        self.means = list()
+        self.covs = list()
 
     def forward(self,
                 returns: torch.Tensor,
@@ -65,6 +67,7 @@ class RPO(Estimators):
                                                  max_q=50)
         else:
             raise NotImplementedError
+        self.means.append(mean_t)
 
         # covariance estimator
         if self.covariance_estimator == "mle":
@@ -83,6 +86,7 @@ class RPO(Estimators):
                                                   max_q= 50)
         else:
             raise NotImplementedError
+        self.covs.append(cov_t)
         
         # uncertainty set estimator
         if self.omega_estimator == "mle":
