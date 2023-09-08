@@ -117,6 +117,7 @@ if __name__ == "__main__":
     results = {
         
         "model": model,
+        "covs": model.covs,
         "train_loss": None,
         "eval_loss": None,
         "test_loss": test_loss,
