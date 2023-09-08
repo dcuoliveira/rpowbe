@@ -111,8 +111,9 @@ def create_rolling_window_ts(target, features, num_timesteps_in, num_timesteps_o
     # use rolling window indices to subset data
     window_features, window_target = [], []
     for i, j in indices:
-        window_features.append(features[i:j, :])
-        window_target.append(target[j:(j + num_timesteps_out), :])
+
+        window_features.append(features[i:j, :]) # val \in [i, j)
+        window_target.append(target[(j + num_timesteps_out):(j + num_timesteps_out + 1), :]) # val \in [j + num_timesteps_out, j + num_timesteps_out + 1)
 
     if drop_last:
         window_features = window_features[:-1]
