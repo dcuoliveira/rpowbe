@@ -41,11 +41,17 @@ def save_result_in_blocks(results, args, path):
         json.dump(args_dict, fp)
 
     years = list(pd.Series([dtref.year for dtref in results["summary"]["date"]]).unique())
+    
+    tot = results["means"].shape[0]
+    start = 0
+    end =  parts = tot // len(years)
 
     for y in tqdm(years, total=len(years), desc="Saving Results"):
         
         tmp_results = {
 
+            "means": results["means"][start:end, :, :],
+            "covs": results["covs"][start:end, :, :],
             "train_loss": None,
             "eval_loss": None,
             "test_loss": None,
@@ -59,10 +65,16 @@ def save_result_in_blocks(results, args, path):
         save_pickle(obj=tmp_results, path=os.path.join(path, "results_{}.pickle".format(y)))
         tmp_results["summary"].to_csv(os.path.join(path, "summary_{}.csv".format(y)), index=False)
 
+        start = end
+        end += parts
+
+        if end > tot:
+            end = tot
+
     if results["test_loss"] is not None:
         save_pickle(obj={"test_loss": results["test_loss"]}, path=os.path.join(path, "test_loss.pickle")) 
 
-    save_pickle(obj={"model": results["model"]}, path=os.path.join(path, "model.pickle"))
+    save_pickle(obj={"means": results["means"], "covs": results["covs"]}, path=os.path.join(path, "opt_params.pickle"))
 
 def save_pickle(path: str,
                 obj: dict):
