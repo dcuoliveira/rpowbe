@@ -59,19 +59,18 @@ class DependentBootstrapSampling:
             b = int(math.ceil(N / self.Bsize))
             selected_blocks = random.choices(self.Blocks, k = b)
 
-            sampled_data = torch.hstack(selected_blocks)
-
+            sampled_data = torch.vstack(selected_blocks)
             return sampled_data[:, :N]
     
         elif self.boot_method == "nobb":
 
-            N = self.time_series.shape[0]
+            N = self.time_series.shape[1]
             b = int(math.ceil(N / self.Bsize))
             selected_blocks = random.choices(self.Blocks, k = b)
 
             sampled_data = torch.vstack(selected_blocks)
 
-            return sampled_data[:N, :]
+            return sampled_data[:, :N]
 
         elif self.boot_method == "rbb":
             
@@ -121,11 +120,11 @@ class DependentBootstrapSampling:
             Block_sets (list): list of blocks
         """
 
-        N = self.time_series.shape[0]
+        N = self.time_series.shape[1]
 
         Block_sets = list()
         for i in range(0, N, self.Bsize):
-            Block = self.time_series[(i+1):(i + self.Bsize), :]
+            Block = self.time_series[:,(i+1):(i + self.Bsize)]
             Block_sets.append(Block)
 
         return Block_sets
