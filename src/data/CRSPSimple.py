@@ -14,6 +14,7 @@ class CRSPSimple(object):
     """
     
     def __init__(self,
+                 use_small_data: bool = False,
                  use_sample_data: bool = True,
                  fields: list=["close"],
                  all_years: bool = False,
@@ -23,6 +24,7 @@ class CRSPSimple(object):
 
         self.inputs_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "inputs")
         self.use_sample_data = use_sample_data
+        self.use_small_data = use_small_data
         self.fields = fields
         self.all_years = all_years
         self.years = years
@@ -34,10 +36,16 @@ class CRSPSimple(object):
     def _read_data(self,
                    fields: list,
                    years: list):
+        
+        if self.use_small_data:
+            crsp_df = pd.read_csv(os.path.join(self.inputs_path, "crsp_small_sample.csv"))
 
-        if self.use_sample_data:
+            crsp_df["date"] = pd.to_datetime(crsp_df["date"])
+            crsp_df.set_index("date", inplace=True)            
+
+        elif self.use_sample_data:
     
-            crsp_df = pd.read_csv(os.path.join(self.inputs_path, "crsp_simple_sample.csv"))
+            crsp_df = pd.read_csv(os.path.join(self.inputs_path, "crsp_sample.csv"))
 
             crsp_df["date"] = pd.to_datetime(crsp_df["date"])
             crsp_df.set_index("date", inplace=True)
