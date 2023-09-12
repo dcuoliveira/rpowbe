@@ -74,8 +74,6 @@ def save_result_in_blocks(results, args, path):
     if results["test_loss"] is not None:
         save_pickle(obj={"test_loss": results["test_loss"]}, path=os.path.join(path, "test_loss.pickle")) 
 
-    save_pickle(obj={"means": results["means"], "covs": results["covs"]}, path=os.path.join(path, "opt_params.pickle"))
-
 def save_pickle(path: str,
                 obj: dict):
 
