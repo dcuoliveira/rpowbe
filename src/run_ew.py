@@ -57,6 +57,8 @@ if __name__ == "__main__":
     results = {
         
         "model": model,
+        "means": None,
+        "covs": None,
         "train_loss": None,
         "eval_loss": None,
         "test_loss": None,
