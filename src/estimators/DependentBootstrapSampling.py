@@ -55,27 +55,27 @@ class DependentBootstrapSampling:
         """
         if self.boot_method == "cbb":
 
-            N = self.time_series.shape[1]
+            N = self.time_series.shape[0]
             b = int(math.ceil(N / self.Bsize))
             selected_blocks = random.choices(self.Blocks, k = b)
 
             sampled_data = torch.vstack(selected_blocks)
-            return sampled_data[:, :N]
+            return sampled_data[:N, :]
     
         elif self.boot_method == "nobb":
 
-            N = self.time_series.shape[1]
+            N = self.time_series.shape[0]
             b = int(math.ceil(N / self.Bsize))
             selected_blocks = random.choices(self.Blocks, k = b)
 
             sampled_data = torch.vstack(selected_blocks)
 
-            return sampled_data[:, :N]
+            return sampled_data[:N, :]
 
         elif self.boot_method == "rbb":
             
-            N = self.time_series.shape[1]
-            M = self.time_series.shape[0]
+            N = self.time_series.shape[0]
+            M = self.time_series.shape[1]
             
             sampled_data = list()
             for i in range(M):
@@ -83,19 +83,18 @@ class DependentBootstrapSampling:
                 model = self.Models[i]
                 P = self.Ps[i]
                 boot_errors = random.choices(self.errors[i],N - P)
-                boot_time_series = self.time_series[i,:P]
+                boot_time_series = [self.time_series[:P,i]]
                 
                 for j in range(P,N):
                     pred_X =  model.predict_in_sample(boot_time_series[(j - P):j]) + boot_errors[j - P]
-                    boot_time_series = torch.hstack((boot_time_series,pred_X))
+                    boot_time_series.append(pred_X)#torch.hstack((boot_time_series,pred_X))
                 
+                boot_time_series = torch.hstack(boot_time_series)
                 sampled_data.append(boot_time_series)
-                print(boot_time_series.shape)
-                break
             
             sampled_data = torch.vstack(sampled_data)
 
-            return sampled_data
+            return sampled_data.T
     
     def create_blocks(self) -> None:
         """
@@ -120,11 +119,11 @@ class DependentBootstrapSampling:
             Block_sets (list): list of blocks
         """
 
-        N = self.time_series.shape[1]
+        N = self.time_series.shape[0]
 
         Block_sets = list()
         for i in range(0, N, self.Bsize):
-            Block = self.time_series[:,(i+1):(i + self.Bsize)]
+            Block = self.time_series[i:min((i + self.Bsize),N),:]
             Block_sets.append(Block)
 
         return Block_sets
@@ -137,13 +136,13 @@ class DependentBootstrapSampling:
             Block_sets (list): list of blocks
         """
 
-        N = self.time_series.shape[1]
-        dtime_series = torch.hstack((self.time_series.clone().detach(),self.time_series[:,:(self.Bsize + 1)].clone().detach()))
+        N = self.time_series.shape[0]
+        dtime_series = torch.vstack((self.time_series.clone().detach(),self.time_series[:(self.Bsize + 1),:].clone().detach()))
 
         Block_sets = list()
         for i in range(N):
             j = i + self.Bsize
-            Block = dtime_series[:,i:j]
+            Block = dtime_series[i:j,:]
             Block_sets.append(Block)
         
         return Block_sets
@@ -164,8 +163,8 @@ class DependentBootstrapSampling:
             None
         """
 
-        N = self.time_series.shape[1] 
-        M = self.time_series.shape[0]
+        N = self.time_series.shape[0] 
+        M = self.time_series.shape[1]
         
         # apply auto_arima for each time series
         errors = list()
@@ -173,7 +172,7 @@ class DependentBootstrapSampling:
         Ps = list()
         Qs = list()
         for i in range(M):
-            time_series_data = self.time_series[i,:]
+            time_series_data = self.time_series[:,i]
             model = auto_arima(time_series_data,
                                start_p=1,
                                start_q=1,
@@ -201,7 +200,7 @@ class DependentBootstrapSampling:
                 ierrors.append(error)
 
             # center ierrors
-            ierrors = torch.hstack(ierrors)
+            ierrors = torch.vstack(ierrors)
             ierrors = ierrors - torch.mean(ierrors)
             errors.append(ierrors)
         

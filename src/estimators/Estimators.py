@@ -20,7 +20,7 @@ class Estimators:
         Returns:
             mean_t (torch.tensor): MLE estimates for the mean of the returns.
         """
-        mean_t = torch.mean(returns, axis=0)
+        mean_t = torch.mean(returns, axis = 0)
 
         return mean_t
     
@@ -36,9 +36,7 @@ class Estimators:
             cov_t (torch.tensor): MLE estimates for the covariance of the returns.
         """
         
-        T = returns.shape[0]
-        mean_t = self.MLEMean(returns)
-        cov_t = torch.matmul((returns - mean_t).T, (returns - mean_t)) / T
+        cov_t = torch.cov(returns.T,correction = 0)
 
         return cov_t
     
@@ -138,9 +136,11 @@ class Estimators:
                                              max_q=max_q)
         
         list_covs = list()
+        print(returns.shape)
         for _ in range(rep):
             boot_returns = sampler.sample()
             list_covs.append(self.MLECovariance(boot_returns))
+            print(list_covs[-1].shape)
 
         # compute the overall bootstrap sample mean
         sorted_cov = sorted(list_covs, key=lambda cov: torch.max(torch.linalg.eig(cov).eigenvalues.real).item())#torch.stack(list_covs)
