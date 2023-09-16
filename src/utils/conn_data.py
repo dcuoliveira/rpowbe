@@ -2,7 +2,6 @@ import os
 import json
 import pickle
 import pandas as pd
-import bz2
 from tqdm import tqdm
 
 def save_csv_result_in_blocks(df, args, path):
@@ -41,11 +40,18 @@ def save_result_in_blocks(results, args, path):
         json.dump(args_dict, fp)
 
     years = list(pd.Series([dtref.year for dtref in results["summary"]["date"]]).unique())
+    
+    if (results["means"] is not None) or (results["covs"] is not None):
+        tot = results["means"].shape[0] if results["means"] is not None else results["covs"].shape[0]
+        start = 0
+        end =  parts = tot // len(years)
 
     for y in tqdm(years, total=len(years), desc="Saving Results"):
         
         tmp_results = {
 
+            "means": results["means"][start:end, :] if results["means"] is not None else None,
+            "covs": results["covs"][start:end, :, :] if results["covs"] is not None else None,
             "train_loss": None,
             "eval_loss": None,
             "test_loss": None,
@@ -59,19 +65,25 @@ def save_result_in_blocks(results, args, path):
         save_pickle(obj=tmp_results, path=os.path.join(path, "results_{}.pickle".format(y)))
         tmp_results["summary"].to_csv(os.path.join(path, "summary_{}.csv".format(y)), index=False)
 
+        if (results["means"] is not None) and (results["covs"] is not None):
+            start = end
+            end += parts
+
+            if end > tot:
+                end = tot
+
     if results["test_loss"] is not None:
         save_pickle(obj={"test_loss": results["test_loss"]}, path=os.path.join(path, "test_loss.pickle")) 
-
-    save_pickle(obj={"model": results["model"]}, path=os.path.join(path, "model.pickle"))
 
 def save_pickle(path: str,
                 obj: dict):
 
-    with bz2.BZ2File(path,'wb') as handle:
+    with open(path, 'wb') as handle:
         pickle.dump(obj, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def load_pickle(path: str):
-    file = open(path, 'rb')
-    target_dict = pickle.load(file)
+
+    with open(path, 'rb') as handle:
+        target_dict = pickle.load(handle)
 
     return target_dict

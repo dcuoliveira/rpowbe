@@ -16,6 +16,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="mvo")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 3)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
+parser.add_argument('--use_small_data', type=bool, help='use small sample stocks data', default=False)
 parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
 parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
 parser.add_argument('-lo', '--long_only', type=bool, help='consider long only constraint on the optimization', default=False)
@@ -34,6 +35,7 @@ if __name__ == "__main__":
     num_timesteps_out = args.num_timesteps_out
     fix_start = False
     drop_last = True
+    use_small_data = args.use_small_data
     use_sample_data = args.use_sample_data
     all_years = args.all_years
     long_only = args.long_only
@@ -42,6 +44,8 @@ if __name__ == "__main__":
 
     # add tag for long only or long-short portfolios
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
+
+    model_name = "{}_small".format(model_name) if args.use_small_data else model_name
 
     # add tag for sample data
     model_name = "{}_sample".format(model_name) if args.use_sample_data else model_name
@@ -59,7 +63,7 @@ if __name__ == "__main__":
     inputs_path = os.path.join(source_path, "data", "inputs")
 
     # prepare dataset
-    loader = CRSPSimple(use_sample_data=use_sample_data, all_years=all_years)
+    loader = CRSPSimple(use_small_data=use_small_data, use_sample_data=args.use_sample_data, all_years=args.all_years)
     returns = loader.returns.T
     features = loader.features
     features = features.reshape(features.shape[0], features.shape[1] * features.shape[2]).T  
@@ -72,7 +76,8 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = MVO()
+    model = MVO(mean_estimator=mean_estimator,
+                covariance_estimator=covariance_estimator)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()
@@ -117,8 +122,8 @@ if __name__ == "__main__":
     results = {
         
         "model": model,
-        "means": model.means,
-        "covs": model.covs,
+        "means": torch.vstack(model.means),
+        "covs": torch.stack(model.covs),
         "train_loss": None,
         "eval_loss": None,
         "test_loss": test_loss,

@@ -11,6 +11,7 @@ from utils.conn_data import save_result_in_blocks
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--model_name', type=str, help='model name to be used for saving the model', default="ew")
+parser.add_argument('--use_small_data', type=bool, help='use sample stocks data', default=False)
 parser.add_argument('--use_sample_data', type=bool, help='use sample stocks data', default=True)
 parser.add_argument('--all_years', type=bool, help='use all years to build dataset', default=False)
 
@@ -23,14 +24,18 @@ if __name__ == "__main__":
     # relevant paths
     source_path = os.path.dirname(__file__)
     inputs_path = os.path.join(source_path, "data", "inputs")
+    use_small_data = args.use_small_data
+
     model_name = "{}_lo".format(args.model_name)
+
+    model_name = "{}_small".format(model_name) if args.use_small_data else model_name
 
     model_name = "{}_sample".format(model_name) if args.use_sample_data else model_name
 
     args.model_name = model_name
 
     # prepare dataset
-    loader = CRSPSimple(use_sample_data=args.use_sample_data, all_years=args.all_years)
+    loader = CRSPSimple(use_small_data=use_small_data, use_sample_data=args.use_sample_data, all_years=args.all_years)
     returns = loader.returns.T
     features = loader.features
     features = features.reshape(features.shape[0], features.shape[1] * features.shape[2]).T    
@@ -52,6 +57,8 @@ if __name__ == "__main__":
     results = {
         
         "model": model,
+        "means": None,
+        "covs": None,
         "train_loss": None,
         "eval_loss": None,
         "test_loss": None,

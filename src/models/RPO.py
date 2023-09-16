@@ -67,7 +67,7 @@ class RPO(Estimators):
                                                  max_q=50)
         else:
             raise NotImplementedError
-        self.means.append(mean_t)
+        self.means.append(mean_t[None, :])
 
         # covariance estimator
         if self.covariance_estimator == "mle":
