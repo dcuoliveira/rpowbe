@@ -53,6 +53,7 @@ class DependentBootstrapSampling:
         Returns:
             sampled_data (torch.Tensor): sampled data
         """
+        
         if self.boot_method == "cbb":
 
             N = self.time_series.shape[1]
