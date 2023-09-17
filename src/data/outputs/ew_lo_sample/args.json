@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-{"model_name": "ew_lo_sample", "use_sample_data": true, "all_years": false}
-=======
-{"model_name": "ew_lo_sample", "use_sample_data": true, "use_small_data": false, "all_years": false}
->>>>>>> dd62fa52eb7352891869c6be5dd345dd9aeff621
+{"model_name": "ew_lo_sample", "use_small_data": false, "use_sample_data": true, "all_years": false}
