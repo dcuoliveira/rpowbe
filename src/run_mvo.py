@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("Running script with the following parameters: model_name: {}, use_sample_data: {}, all_years: {}, long_only: {}, mean_estimator: {}, covariance_estimator: {}".format(args.model_name, args.use_sample_data, args.all_years, args.long_only, args.mean_estimator, args.covariance_estimator))
+    print("Running script with the following parameters: model_name: {}, use_small_data {}, use_sample_data: {}, all_years: {}, long_only: {}, mean_estimator: {}, covariance_estimator: {}".format(args.model_name, args.use_small_data, args.use_sample_data, args.all_years, args.long_only, args.mean_estimator, args.covariance_estimator))
 
     model_name = args.model_name
     train_ratio = 0.6
