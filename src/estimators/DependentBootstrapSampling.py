@@ -82,7 +82,7 @@ class DependentBootstrapSampling:
                 
                 model = self.Models[i]
                 P = self.Ps[i]
-                boot_errors = random.choices(self.errors[i],N - P)
+                boot_errors = random.choices(self.errors[i],k = N - P)
                 boot_time_series = [self.time_series[:P,i]]
                 
                 for j in range(P,N):
@@ -137,7 +137,7 @@ class DependentBootstrapSampling:
         """
 
         N = self.time_series.shape[0]
-        dtime_series = torch.vstack((self.time_series.clone().detach(),self.time_series[:(self.Bsize + 1),:].clone().detach()))
+        dtime_series = torch.vstack([self.time_series.clone().detach(),self.time_series[:self.Bsize,:].clone().detach()])
 
         Block_sets = list()
         for i in range(N):
@@ -200,7 +200,7 @@ class DependentBootstrapSampling:
                 ierrors.append(error)
 
             # center ierrors
-            ierrors = torch.vstack(ierrors)
+            ierrors = torch.hstack(ierrors)
             ierrors = ierrors - torch.mean(ierrors)
             errors.append(ierrors)
         
