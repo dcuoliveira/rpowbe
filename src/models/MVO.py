@@ -33,9 +33,12 @@ class MVO(Estimators):
         self.covs = list()
 
     def objective(self,
-                  weights):
-        
-        return -(np.dot(self.mean_t, weights) + ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights))))
+                  weights: torch.Tensor,
+                  maximize: bool=True) -> float:
+            
+        c = -1 if maximize else 1
+
+        return (np.dot(self.mean_t, weights) - ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights)))) * c
 
     def forward(self,
                 returns: torch.Tensor,
@@ -95,10 +98,11 @@ class MVO(Estimators):
             bounds = [(-1, 1) for _ in range(K)]
 
         # initial guess for the weights
-        x0 = np.ones(K) / K
+        # generate random sequence of weights of size K
+        w0 = np.random.uniform(size=K)
 
         # perform the optimization
-        opt_output = opt.minimize(self.objective, x0, constraints=constraints, bounds=bounds, method='SLSQP')
+        opt_output = opt.minimize(self.objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')
         wt = torch.tensor(np.array(opt_output.x)).T.repeat(num_timesteps_out, 1)
 
         return wt
