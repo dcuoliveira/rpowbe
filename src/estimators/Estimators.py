@@ -91,15 +91,19 @@ class Estimators:
                                              max_p=max_p,
                                              max_q=max_q)
         
-        list_means = list()
-        for _ in range(rep):
-            boot_returns = sampler.sample()
-            boot_mean = self.MLEMean(boot_returns)
-            list_means.append(boot_mean)
+        if boot_method != "sb":
+            list_means = list()
+            for _ in range(rep):
+                boot_returns = sampler.sample()
+                boot_mean = self.MLEMean(boot_returns)
+                list_means.append(boot_mean)
 
-        # compute the overall bootstrap sample mean
-        smeans = torch.vstack(list_means)
-        mean = torch.mean(smeans, axis=0)
+            # compute the overall bootstrap sample mean
+            smeans = torch.vstack(list_means)
+            mean = torch.mean(smeans, axis=0)
+        else:
+            boot_returns = sampler.sample()
+            mean = torch.mean(boot_returns, axis=0)
 
         return mean
     
@@ -131,13 +135,17 @@ class Estimators:
                                              max_p=max_p,
                                              max_q=max_q)
         
-        list_covs = list()
-        for _ in range(rep):
-            boot_returns = sampler.sample()
-            list_covs.append(self.MLECovariance(boot_returns))
+        if boot_method != "sb":
+            list_covs = list()
+            for _ in range(rep):
+                boot_returns = sampler.sample()
+                list_covs.append(self.MLECovariance(boot_returns))
 
-        # compute the overall bootstrap sample mean
-        scov = torch.stack(list_covs)
-        mean_scov = torch.mean(scov,axis = 0)
+            # compute the overall bootstrap sample mean
+            scov = torch.stack(list_covs)
+            mean_scov = torch.mean(scov, axis = 0)
+        else:
+            boot_returns = sampler.sample()
+            mean_scov = self.MLECovariance(boot_returns)
 
         return mean_scov
