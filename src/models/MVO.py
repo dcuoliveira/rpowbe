@@ -39,6 +39,22 @@ class MVO(Estimators):
         c = -1 if maximize else 1
 
         return (np.dot(self.mean_t, weights) - ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights)))) * c
+    
+    def random_weights_with_constraints(self,
+                                        K: int) -> torch.Tensor:
+
+        # generate weights of size K
+        w0 = np.random.uniform(-1, 1, size=K)
+
+        # positive and negative weights sum to one
+        w0 = w0 / np.sum(np.abs(w0))
+
+        # sum of the weights is zero
+        w0 = w0 - np.mean(w0)
+
+        w0 = torch.tensor(w0).T
+
+        return w0
 
     def forward(self,
                 returns: torch.Tensor,
@@ -99,7 +115,7 @@ class MVO(Estimators):
 
         # initial guess for the weights
         # generate random sequence of weights of size K
-        w0 = np.random.uniform(size=K)
+        w0 = self.random_weights_with_constraints(K=K)
 
         # perform the optimization
         opt_output = opt.minimize(self.objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')
