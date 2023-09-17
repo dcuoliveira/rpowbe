@@ -23,7 +23,7 @@ class MD(Estimators):
 
     def objective(self,
                   weights: torch.Tensor,
-                  maximize: bool=True) -> float:
+                  maximize: bool=True) -> torch.Tensor:
    
         c = -1 if maximize else 1
 
