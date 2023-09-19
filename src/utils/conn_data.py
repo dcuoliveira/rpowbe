@@ -50,8 +50,6 @@ def save_result_in_blocks(results, args, path):
         
         tmp_results = {
 
-            "means": results["means"][start:end, :] if results["means"] is not None else None,
-            "covs": results["covs"][start:end, :, :] if results["covs"] is not None else None,
             "train_loss": None,
             "eval_loss": None,
             "test_loss": None,
@@ -66,6 +64,21 @@ def save_result_in_blocks(results, args, path):
         tmp_results["summary"].to_csv(os.path.join(path, "summary_{}.csv".format(y)), index=False)
 
         if (results["means"] is not None) and (results["covs"] is not None):
+
+            if (results["means"] is not None):
+                tmp_means = {
+
+                    "means": results["means"][start:end],
+                }
+                save_pickle(obj=tmp_means, path=os.path.join(path, "means_{}.pickle".format(y)))
+
+            if (results["covs"] is not None):
+                tmp_covs = {
+
+                    "covs": results["covs"][start:end]
+                }
+                save_pickle(obj=tmp_covs, path=os.path.join(path, "covs_{}.pickle".format(y)))
+
             start = end
             end += parts
 

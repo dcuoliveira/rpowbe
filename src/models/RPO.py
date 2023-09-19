@@ -42,6 +42,16 @@ class RPO(Estimators):
         self.means = list()
         self.covs = list()
 
+    def objective(self,
+                  weights: torch.Tensor,
+                  maximize: bool=True) -> torch.Tensor:
+        
+        c = -1 if maximize else 1
+
+        # max w^{\top}\bar{u} - (\kappa)*\sqrt(w^{\top} \Omega w) - \frac{\lambda}{2}w^{\top} \Sigma w
+        # Problem
+        return (np.dot(self.mean_t, weights) - self.uncertainty_aversion*np.sqrt(np.dot(weights,np.dot(self.omega_t,weights))) - (self.risk_aversion/2)*np.dot(weights,np.dot(self.cov_t,weights))) * c
+
     def forward(self,
                 returns: torch.Tensor,
                 num_timesteps_out: int,
@@ -52,14 +62,14 @@ class RPO(Estimators):
 
         # mean estimator
         if self.mean_estimator == "mle":
-            mean_t = self.MLEMean(returns)
+            self.mean_t = self.MLEMean(returns)
         elif (self.mean_estimator == "cbb") or (self.mean_estimator == "nobb"):
-            mean_t = self.DependentBootstrapMean(returns=returns,
+            self.mean_t = self.DependentBootstrapMean(returns=returns,
                                                  boot_method=self.mean_estimator,
                                                  Bsize=50,
                                                  rep=1000)
         elif self.mean_estimator == "rbb":
-            mean_t = self.DependentBootstrapMean(returns=returns,
+            self.mean_t = self.DependentBootstrapMean(returns=returns,
                                                  boot_method=self.mean_estimator,
                                                  Bsize=50,
                                                  rep=1000,
@@ -67,18 +77,18 @@ class RPO(Estimators):
                                                  max_q=50)
         else:
             raise NotImplementedError
-        self.means.append(mean_t[None, :])
+        self.means.append(self.mean_t[None, :])
 
         # covariance estimator
         if self.covariance_estimator == "mle":
-            cov_t = self.MLECovariance(returns)
+            self.cov_t = self.MLECovariance(returns)
         elif (self.covariance_estimator == "cbb") or (self.covariance_estimator == "nobb"):
-            cov_t = self.DependentBootstrapCovariance(returns = returns,
-                                                      boot_method = self.covariance_estimator,
-                                                      Bsize = 50,
-                                                      rep = 1000)
+            cov_t = self.DependentBootstrapCovariance(returns=returns,
+                                                      boot_method=self.covariance_estimator,
+                                                      Bsize=50,
+                                                      rep=1000)
         elif self.covariance_estimator == "rbb":
-            cov_t = self.DepenBootstrapCovariance(returns=returns,
+            self.cov_t = self.DepenBootstrapCovariance(returns=returns,
                                                   boot_method=self.covariance_estimator,
                                                   Bsize= 50,
                                                   rep = 1000,
@@ -86,29 +96,29 @@ class RPO(Estimators):
                                                   max_q= 50)
         else:
             raise NotImplementedError
-        self.covs.append(cov_t)
+        self.covs.append(self.cov_t)
         
         # uncertainty set estimator
         if self.omega_estimator == "mle":
-            omega_t = self.MLEUncertainty(T,cov_t)
+            self.omega_t = self.MLEUncertainty(T, self.cov_t)
         else:
             raise NotImplementedError
         
         # uncertainty (\kappa) aversion estimator
         if self.uncertainty_aversion_estimator == "yin-etal-2022":
             sharpe_ratios = compute_summary_statistics(returns)
-            uncertainty_aversion = sharpe_ratios["Sharpe"] / 2 
+            self.uncertainty_aversion = sharpe_ratios["Sharpe"] / 2 
         elif self.uncertainty_aversion_estimator == "ceria-stubbs-2006":
             # Cummulative chi-square function  
             eta = 0.95 # Ceria-Stubbs do not comment on the value they used, hence I am setting 95%
-            uncertainty_aversion = chi2.ppf(1 - eta, df = K)
+            self.uncertainty_aversion = chi2.ppf(1 - eta, df = K)
         else:
             raise NotImplementedError
 
         # max w^{\top}\bar{u} - (\kappa)*\sqrt(w^{\top} \Omega w) - \frac{\lambda}{2}w^{\top} \Sigma w
         # Problem
         def objective(weights):
-            return -(np.dot(mean_t, weights) - uncertainty_aversion*np.sqrt(np.dot(weights,np.dot(omega_t,weights))) - (self.risk_aversion/2)*np.dot(weights,np.dot(cov_t,weights)))
+            return np.dot(mean_t, weights) - uncertainty_aversion*np.sqrt(np.dot(weights,np.dot(omega_t,weights))) - (self.risk_aversion/2)*np.dot(weights,np.dot(cov_t,weights))
 
         if long_only:
             constraints = [
@@ -124,10 +134,10 @@ class RPO(Estimators):
             bounds = None
 
         # initial guess for the weights
-        x0 = np.ones(K) / K
+        w0 = np.random.uniform(size=K)
 
         # Perform the optimization
-        opt_output = opt.minimize(objective, x0, constraints=constraints, bounds=bounds, method='SLSQP')
+        opt_output = opt.minimize(self.objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')
         wt = torch.tensor(np.array(opt_output.x)).T.repeat(num_timesteps_out, 1)
 
         return wt

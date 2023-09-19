@@ -21,12 +21,16 @@ class MD(Estimators):
         self.covariance_estimator = covariance_estimator
         self.covs = list()
 
-    def objective(self, weights):
+    def objective(self,
+                  weights: torch.Tensor,
+                  maximize: bool=True) -> torch.Tensor:
    
+        c = -1 if maximize else 1
+
         portfolio_volatility = np.sqrt(np.dot(weights, np.dot(self.cov_t, weights)))
         weighted_volatilities = np.dot(weights.T, self.vol_t)
-        diversification_ratio = - weighted_volatilities / portfolio_volatility
-        return diversification_ratio
+        diversification_ratio = (weighted_volatilities / portfolio_volatility)
+        return diversification_ratio * c
 
     def forward(self,
                 returns: torch.Tensor,
@@ -70,7 +74,7 @@ class MD(Estimators):
             bounds = [(-1, 1) for _ in range(K)]
 
         # initial guess for the weights (equal distribution)
-        w0 = np.repeat(1 / K, K)
+        w0 = np.random.uniform(size=K)
 
         # perform the optimization
         opt_output = opt.minimize(self.objective, w0, method='SLSQP', bounds=bounds, constraints=constraints)

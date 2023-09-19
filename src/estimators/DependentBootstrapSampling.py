@@ -53,6 +53,7 @@ class DependentBootstrapSampling:
         Returns:
             sampled_data (torch.Tensor): sampled data
         """
+        
         if self.boot_method == "cbb":
 
             N = self.time_series.shape[0]
@@ -94,7 +95,7 @@ class DependentBootstrapSampling:
             
             sampled_data = torch.vstack(sampled_data)
 
-            return sampled_data.T
+            return sampled_data
     
     def create_blocks(self) -> None:
         """
@@ -108,8 +109,43 @@ class DependentBootstrapSampling:
             self.Blocks = self.create_circular_blocks()
         elif self.boot_method == "nobb":
             self.Blocks = self.create_non_overlapping_blocks()
+        elif self.boot_method == "sb":
+            self.Blocks = self.create_stationary_blocks()
         else:
             self.Blocks = None
+
+    def create_stationary_blocks(self) -> list:
+        """
+        Method to create the block sets to be used in the stationary bootstrap model.
+
+        Returns:
+            Block_sets (list): list of blocks
+        """
+
+        N = self.time_series.shape[0]
+
+        Block_sets = list()
+        Ls = list()
+        Is = list()
+
+        total = 0
+        i = 0
+        while total < N:
+
+            # write me a line of code to generate a random integer number between 1 and N
+            I = random.randint(1, N)
+            L = np.random.geometric(p=0.5, size=1)[0]
+
+            Block = self.time_series[I:(I + L), :]
+            Block_sets.append(Block)
+
+            Ls.append(L)
+            Is.append(I)
+
+            total += L
+            i += 1
+
+        return Block_sets
     
     def create_non_overlapping_blocks(self) -> list:
         """
