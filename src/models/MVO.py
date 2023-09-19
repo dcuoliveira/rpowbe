@@ -35,7 +35,7 @@ class MVO(Estimators):
     def objective(self,
                   weights):
         
-        return -(np.dot(self.mean_t, weights) + ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights))))
+        return -(np.dot(self.mean_t, weights) - ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights))))
 
     def forward(self,
                 returns: torch.Tensor,
