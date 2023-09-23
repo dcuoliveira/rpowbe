@@ -63,18 +63,22 @@ class MD(Estimators):
 
         if long_only:
             constraints = [
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # The weights sum to one
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
             ]
             bounds = [(0, None) for _ in range(K)]
+
+            w0 = np.random.uniform(start=0, stop=1, size=K)
         else:
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
-                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1}  # the sum of absolute weights is one
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1},  # the weights sum to zero
             ]
             bounds = [(-1, 1) for _ in range(K)]
 
+            w0 = np.random.uniform(-1, 1, size=K)
+
         # initial guess for the weights (equal distribution)
-        w0 = np.random.uniform(size=K)
+        w0 = self.random_weights_with_constraints(K=K)
 
         # perform the optimization
         opt_output = opt.minimize(self.objective, w0, method='SLSQP', bounds=bounds, constraints=constraints)
