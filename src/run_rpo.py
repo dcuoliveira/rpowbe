@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("Running script with the following parameters: model_name: {}, use_sample_data: {}, all_years: {}, long_only: {}, mean_estimator: {}, covariance_estimator: {}".format(args.model_name, args.use_sample_data, args.all_years, args.long_only, args.mean_estimator, args.covariance_estimator))
+    print("Running script with the following parameters: model_name: {}, use_small_data {}, use_sample_data: {}, all_years: {}, long_only: {}, mean_estimator: {}, covariance_estimator: {}".format(args.model_name, args.use_small_data, args.use_sample_data, args.all_years, args.long_only, args.mean_estimator, args.covariance_estimator))
 
     model_name = args.model_name
     train_ratio = 0.6
@@ -47,10 +47,10 @@ if __name__ == "__main__":
     # add tag for long only or long-short portfolios
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
 
-    model_name = "{}_small".format(model_name) if args.use_small_data else model_name
+    model_name = "{}_small".format(model_name) if use_small_data else model_name
 
     # add tag for sample data
-    model_name = "{}_sample".format(model_name) if args.use_sample_data else model_name
+    model_name = "{}_sample".format(model_name) if use_sample_data else model_name
 
     # add mean estimator tag to name
     model_name = "{model_name}_{mean_estimator}".format(model_name=model_name, mean_estimator=mean_estimator)
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     inputs_path = os.path.join(source_path, "data", "inputs")
 
     # prepare dataset
-    loader = CRSPSimple(use_small_data=use_small_data, use_sample_data=args.use_sample_data, all_years=args.all_years)
+    loader = CRSPSimple(use_small_data=use_small_data, use_sample_data=use_sample_data, all_years=all_years)
     returns = loader.returns.T
     features = loader.features
     features = features.reshape(features.shape[0], features.shape[1] * features.shape[2]).T  
