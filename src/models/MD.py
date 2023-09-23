@@ -77,9 +77,6 @@ class MD(Estimators):
 
             w0 = np.random.uniform(-1, 1, size=K)
 
-        # initial guess for the weights (equal distribution)
-        w0 = self.random_weights_with_constraints(K=K)
-
         # perform the optimization
         opt_output = opt.minimize(self.objective, w0, method='SLSQP', bounds=bounds, constraints=constraints)
         wt = torch.tensor(np.array(opt_output.x)).T.repeat(num_timesteps_out, 1)
