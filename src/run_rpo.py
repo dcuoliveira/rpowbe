@@ -104,7 +104,7 @@ if __name__ == "__main__":
         X_t = X_steps[step, :, :]
         returns_t1 = returns_steps[step, :, :]
 
-        weights_t1 = model.forward(returns=X_t, num_timesteps_out=num_timesteps_out)
+        weights_t1 = model.forward(returns=X_t, num_timesteps_out=num_timesteps_out, long_only=long_only)
         test_weights[step, :, :] = weights_t1
 
         loss = lossfn(weights=weights_t1, returns=returns_t1)
