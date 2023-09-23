@@ -47,9 +47,9 @@ class RPO(Estimators):
                   maximize: bool=True) -> torch.Tensor:
         
         c = -1 if maximize else 1
-
+        
+        # Problem       
         # max w^{\top}\bar{u} - (\kappa)*\sqrt(w^{\top} \Omega w) - \frac{\lambda}{2}w^{\top} \Sigma w
-        # Problem
         return (np.dot(self.mean_t, weights) - self.uncertainty_aversion*np.sqrt(np.dot(weights,np.dot(self.omega_t,weights))) - (self.risk_aversion/2)*np.dot(weights,np.dot(self.cov_t,weights))) * c
 
     def forward(self,
@@ -65,16 +65,16 @@ class RPO(Estimators):
             self.mean_t = self.MLEMean(returns)
         elif (self.mean_estimator == "cbb") or (self.mean_estimator == "nobb"):
             self.mean_t = self.DependentBootstrapMean(returns=returns,
-                                                 boot_method=self.mean_estimator,
-                                                 Bsize=50,
-                                                 rep=1000)
+                                                      boot_method=self.mean_estimator,
+                                                      Bsize=50,
+                                                      rep=1000)
         elif self.mean_estimator == "rbb":
             self.mean_t = self.DependentBootstrapMean(returns=returns,
-                                                 boot_method=self.mean_estimator,
-                                                 Bsize=50,
-                                                 rep=1000,
-                                                 max_p=50,
-                                                 max_q=50)
+                                                      boot_method=self.mean_estimator,
+                                                      Bsize=50,
+                                                      rep=1000,
+                                                      max_p=50,
+                                                      max_q=50)
         else:
             raise NotImplementedError
         self.means.append(self.mean_t[None, :])
@@ -83,17 +83,17 @@ class RPO(Estimators):
         if self.covariance_estimator == "mle":
             self.cov_t = self.MLECovariance(returns)
         elif (self.covariance_estimator == "cbb") or (self.covariance_estimator == "nobb"):
-            cov_t = self.DependentBootstrapCovariance(returns=returns,
-                                                      boot_method=self.covariance_estimator,
-                                                      Bsize=50,
-                                                      rep=1000)
+            self.cov_t = self.DependentBootstrapCovariance(returns=returns,
+                                                           boot_method=self.covariance_estimator,
+                                                           Bsize=50,
+                                                           rep=1000)
         elif self.covariance_estimator == "rbb":
             self.cov_t = self.DepenBootstrapCovariance(returns=returns,
-                                                  boot_method=self.covariance_estimator,
-                                                  Bsize= 50,
-                                                  rep = 1000,
-                                                  max_p= 50,
-                                                  max_q= 50)
+                                                       boot_method=self.covariance_estimator,
+                                                       Bsize= 50,
+                                                       rep = 1000,
+                                                       max_p= 50,
+                                                       max_q= 50)
         else:
             raise NotImplementedError
         self.covs.append(self.cov_t)
