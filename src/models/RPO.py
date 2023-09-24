@@ -63,7 +63,7 @@ class RPO(Estimators):
         # mean estimator
         if self.mean_estimator == "mle":
             self.mean_t = self.MLEMean(returns)
-        elif (self.mean_estimator == "cbb") or (self.mean_estimator == "nobb"):
+        elif (self.mean_estimator == "cbb") or (self.mean_estimator == "nobb") or (self.mean_estimator == "sb"):
             self.mean_t = self.DependentBootstrapMean(returns=returns,
                                                       boot_method=self.mean_estimator,
                                                       Bsize=50,
