@@ -96,6 +96,10 @@ class DependentBootstrapSampling:
             sampled_data = torch.vstack(sampled_data)
 
             return sampled_data
+        elif self.boot_method == "sb":
+            sampled_data = torch.vstack(self.Blocks)
+
+            return sampled_data
     
     def create_blocks(self) -> None:
         """
