@@ -82,7 +82,7 @@ class RPO(Estimators):
         # covariance estimator
         if self.covariance_estimator == "mle":
             self.cov_t = self.MLECovariance(returns)
-        elif (self.covariance_estimator == "cbb") or (self.covariance_estimator == "nobb"):
+        elif (self.covariance_estimator == "cbb") or (self.covariance_estimator == "nobb") or (self.covariance_estimator == "sb"):
             self.cov_t = self.DependentBootstrapCovariance(returns=returns,
                                                            boot_method=self.covariance_estimator,
                                                            Bsize=50,
