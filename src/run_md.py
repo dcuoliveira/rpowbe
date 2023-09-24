@@ -16,18 +16,17 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="md")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 3)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
-parser.add_argument('--use_small_data', type=bool, help='use small sample stocks data', default=False)
+parser.add_argument('--use_small_data', type=bool, help='use small sample stocks data', default=True)
 parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
 parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
 parser.add_argument('-lo', '--long_only', type=bool, help='consider long only constraint on the optimization', default=False)
-parser.add_argument('-meane', '--mean_estimator', type=str, help='name of the estimator to be used for the expected returns', default="mle")
 parser.add_argument('-cove', '--covariance_estimator', type=str, help='name of the estimator to be used for the covariance of the returns', default="mle")
 
 if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("Running script with the following parameters: model_name: {}, use_sample_data: {}, all_years: {}, long_only: {}, mean_estimator: {}, covariance_estimator: {}".format(args.model_name, args.use_sample_data, args.all_years, args.long_only, args.mean_estimator, args.covariance_estimator))
+    print("Running script with the following parameters: model_name: {}, use_small_data {}, use_sample_data: {}, all_years: {}, long_only: {}, covariance_estimator: {}".format(args.model_name, args.use_small_data, args.use_sample_data, args.all_years, args.long_only, args.covariance_estimator))
 
     model_name = args.model_name
     train_ratio = 0.6
@@ -39,19 +38,15 @@ if __name__ == "__main__":
     use_sample_data = args.use_sample_data
     all_years = args.all_years
     long_only = args.long_only
-    mean_estimator = args.mean_estimator
     covariance_estimator = args.covariance_estimator
 
     # add tag for long only or long-short portfolios
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
 
-    model_name = "{}_small".format(model_name) if args.use_small_data else model_name
+    model_name = "{}_small".format(model_name) if use_small_data else model_name
 
     # add tag for sample data
-    model_name = "{}_sample".format(model_name) if args.use_sample_data else model_name
-
-    # add mean estimator tag to name
-    model_name = "{model_name}_{mean_estimator}".format(model_name=model_name, mean_estimator=mean_estimator)
+    model_name = "{}_sample".format(model_name) if use_sample_data else model_name
 
     # add covariance estimator tag to name
     model_name = "{model_name}_{covariance_estimator}".format(model_name=model_name, covariance_estimator=covariance_estimator)
@@ -63,7 +58,7 @@ if __name__ == "__main__":
     inputs_path = os.path.join(source_path, "data", "inputs")
 
     # prepare dataset
-    loader = CRSPSimple(use_small_data=use_small_data, use_sample_data=args.use_sample_data, all_years=args.all_years)
+    loader = CRSPSimple(use_small_data=use_small_data, use_sample_data=use_sample_data, all_years=all_years)
     returns = loader.returns.T
     features = loader.features
     features = features.reshape(features.shape[0], features.shape[1] * features.shape[2]).T  

@@ -33,9 +33,10 @@ class MVO(Estimators):
         self.covs = list()
 
     def objective(self,
-                  weights):
+                  weights: torch.Tensor,
+                  maximize: bool=True) -> torch.Tensor:
         
-        return -(np.dot(self.mean_t, weights) - ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights))))
+        return -(np.dot(self.mean_t, weights) + ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights))))
 
     def forward(self,
                 returns: torch.Tensor,
@@ -57,8 +58,7 @@ class MVO(Estimators):
                                                     boot_method=self.mean_estimator,
                                                     Bsize=50,
                                                     rep=1000,
-                                                    max_p=50,
-                                                    max_q=50)
+                                                    max_p=4)
         else:
             raise NotImplementedError
         self.means.append(self.mean_t[None, :])
@@ -76,8 +76,7 @@ class MVO(Estimators):
                                                        boot_method=self.covariance_estimator,
                                                        Bsize= 50,
                                                        rep=1000,
-                                                       max_p= 50,
-                                                       max_q= 50)
+                                                       max_p= 4)
         else:
             raise NotImplementedError
         self.covs.append(self.cov_t)
@@ -87,16 +86,16 @@ class MVO(Estimators):
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
             ]
             bounds = [(0, None) for _ in range(K)]
+
+            w0 = np.random.uniform(0, 1, size=K)
         else:
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
-                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1}  # the sum of absolute weights is one
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1},  # the weights sum to zero
             ]
             bounds = [(-1, 1) for _ in range(K)]
 
-        # initial guess for the weights
-        # generate random sequence of weights of size K
-        w0 = self.random_weights_with_constraints(K=K)
+            w0 = np.random.uniform(-1, 1, size=K)
 
         # perform the optimization
         opt_output = opt.minimize(self.objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')

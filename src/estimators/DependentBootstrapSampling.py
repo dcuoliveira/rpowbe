@@ -3,7 +3,10 @@ import torch
 import math
 import random
 import numpy as np
-from pmdarima.arima import auto_arima
+# Import Statsmodels for VAR
+from statsmodels.tsa.api import VAR
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.tools.eval_measures import rmse, aic
 # Class for Bootstrap Sampling
 # This class contains the different ways to generate time series samplings using bootstrap
 
@@ -13,8 +16,7 @@ class DependentBootstrapSampling:
                  time_series: torch.Tensor,
                  boot_method: str = "cbb",
                  Bsize: int = 100,
-                 max_p: int = 10,
-                 max_q: int = 10) -> None:
+                 max_p: int = 4) -> None:
         """
         This class contains the different ways to generate dependent bootstrap samples.
 
@@ -33,13 +35,13 @@ class DependentBootstrapSampling:
         self.Bsize = Bsize # not used when "boot_method" is "rbb".
         self.boot_method = boot_method
         self.Blocks = None # set of blocks
-        self.Models = None # list of ARIMA models, only used when "boot_method" is "rbb".
-        self.errors = None # np.array of errors, only used when "boot_method" is "rbb".
-        self.Ps = None # list of best order parameter (P) of ARIMA model corresponding to each model
+        self.Model = None # list of ARIMA models, only used when "boot_method" is "rbb".
+        self.residuals = None # np.array of errors, only used when "boot_method" is "rbb".
+        self.P = None # best order parameter (P) of VAR model corresponding to each model
         if self.boot_method != "rbb": # if not "rbb" then it is model based
             self.create_blocks()
         else:
-            self.create_ARIMA_models(max_p = max_p, max_q = max_q)
+            self.create_VAR_model(max_p = max_p)
 
     def sample(self) -> torch.Tensor:
         """"
@@ -77,25 +79,22 @@ class DependentBootstrapSampling:
             
             N = self.time_series.shape[0]
             M = self.time_series.shape[1]
-            
-            sampled_data = list()
-            for i in range(M):
-                
-                model = self.Models[i]
-                P = self.Ps[i]
-                boot_errors = random.choices(self.errors[i],k = N - P)
-                boot_time_series = [self.time_series[:P,i]]
-                
-                for j in range(P,N):
-                    pred_X =  model.predict_in_sample(boot_time_series[(j - P):j]) + boot_errors[j - P]
-                    boot_time_series.append(pred_X)#torch.hstack((boot_time_series,pred_X))
-                
-                boot_time_series = torch.hstack(boot_time_series)
-                sampled_data.append(boot_time_series)
-            
-            sampled_data = torch.vstack(sampled_data)
-
-            return sampled_data
+            # first P are equal
+            sampled_data = self.time_series[0:self.P,:].clone()
+            # build array for residuals
+            random_residuals = np.zeros((0,self.residuals.shape[0]))
+            for j in range(M):
+                random_col = np.array(random.choices(self.residuals[:,j],k = self.residuals.shape[0]))
+                random_residuals = np.vstack([random_residuals,random_col])
+            #
+            random_residuals = random_residuals.T
+            #
+            for j in range(N - self.P):
+                new_observation = self.Model.forecast(sampled_data[j:(j + self.P),:],1)
+                new_observation = new_observation + random_residuals[j,:]
+                sampled_data = np.vstack([sampled_data,new_observation])
+        #
+        return torch.Tensor(sampled_data)
     
     def create_blocks(self) -> None:
         """
@@ -133,8 +132,8 @@ class DependentBootstrapSampling:
         while total < N:
 
             # write me a line of code to generate a random integer number between 1 and N
-            I = random.randint(1, N)
             L = np.random.geometric(p=0.5, size=1)[0]
+            I = random.randint(0, N - L)
 
             Block = self.time_series[I:(I + L), :]
             Block_sets.append(Block)
@@ -183,16 +182,15 @@ class DependentBootstrapSampling:
         
         return Block_sets
     
-    def create_ARIMA_models(self,
-                            max_p: int,
-                            max_q: int,
+    # TODO: solve problem when the best parameters are (0,0,0) -> which means that is completely random
+    def create_VAR_model(self,
+                            max_p: int = 10,
                             verbose: bool=False) -> None:
         """
         Method to create the ARIMA models if "boot_method" is "rbb".
 
         Args:
-            max_p (int): maximum order of the AR(p) part of the ARIMA model.
-            max_q (int): maximum order of the MA(q) part of the ARIMA model.
+            max_p (int): maximum order of the VAR(p) part of the VAR model.
             verbose (bool): whether to print the progress or not.
         
         Returns:
@@ -202,52 +200,32 @@ class DependentBootstrapSampling:
         N = self.time_series.shape[0] 
         M = self.time_series.shape[1]
         
-        # apply auto_arima for each time series
-        errors = list()
-        Models = list()
-        Ps = list()
-        Qs = list()
-        for i in range(M):
-            time_series_data = self.time_series[:,i]
-            model = auto_arima(time_series_data,
-                               start_p=1,
-                               start_q=1,
-                               test='adf',
-                               max_p=max_p, max_q=max_q,
-                               m=1,             
-                               d=0,          
-                               seasonal=False,   
-                               start_P=0, 
-                               D=None, 
-                               trace=False,
-                               error_action='ignore',  
-                               suppress_warnings=True, 
-                               stepwise=True)
-            P, D, Q = model.order
-            
-            Models.append(model)
-            Ps.append(P)
-            Qs.append(Q)
+        # FIND ORDER
+        np_time_series = self.time_series.numpy().copy()
+        self.P = self.find_VAR_order(np_time_series,max_p)
+        model = VAR(np_time_series)
+        self.Model = model.fit(self.P)
+        # compute the residuals
+        residuals = np.zeros((0,M))
+        for i in range(self.P,N):
+            new_point = self.Model.forecast(np_time_series[(i-self.P):i,:],1)
+            residuals = np.vstack([residuals,new_point])
 
-            # calculate the errors
-            ierrors = list()
-            for j in range(0,N-P):
-                error = time_series_data[j + P] - model.predict_in_sample(time_series_data[j:(j + P)])
-                ierrors.append(error)
-
-            # center ierrors
-            ierrors = torch.hstack(ierrors)
-            ierrors = ierrors - torch.mean(ierrors)
-            errors.append(ierrors)
-        
-        # save
-        self.Models = Models
-        self.errors = errors
-        self.Ps = Ps
-        self.Qs = Qs
-        
+        # put mean of the residuals to zero
+        col_means = residuals.sum(axis = 0)
+        self.residuals = residuals - col_means
         if verbose:
             print("finished")
 
-        self.sample()
-        
+        #self.sample()
+    
+    #  find the best order by using AIC
+    def find_VAR_order(self,
+                       np_time_series: np.array,
+                       max_p: int) -> int:
+
+        model = VAR(np_time_series)
+        # use AIC because BIC returns 0
+        results = model.fit(maxlags = max_p, ic='aic')
+        #
+        return (results.k_ar)

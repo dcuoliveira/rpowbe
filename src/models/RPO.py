@@ -47,9 +47,9 @@ class RPO(Estimators):
                   maximize: bool=True) -> torch.Tensor:
         
         c = -1 if maximize else 1
-
+        
+        # Problem       
         # max w^{\top}\bar{u} - (\kappa)*\sqrt(w^{\top} \Omega w) - \frac{\lambda}{2}w^{\top} \Sigma w
-        # Problem
         return (np.dot(self.mean_t, weights) - self.uncertainty_aversion*np.sqrt(np.dot(weights,np.dot(self.omega_t,weights))) - (self.risk_aversion/2)*np.dot(weights,np.dot(self.cov_t,weights))) * c
 
     def forward(self,
@@ -63,18 +63,17 @@ class RPO(Estimators):
         # mean estimator
         if self.mean_estimator == "mle":
             self.mean_t = self.MLEMean(returns)
-        elif (self.mean_estimator == "cbb") or (self.mean_estimator == "nobb"):
+        elif (self.mean_estimator == "cbb") or (self.mean_estimator == "nobb") or (self.mean_estimator == "sb"):
             self.mean_t = self.DependentBootstrapMean(returns=returns,
-                                                 boot_method=self.mean_estimator,
-                                                 Bsize=50,
-                                                 rep=1000)
+                                                      boot_method=self.mean_estimator,
+                                                      Bsize=50,
+                                                      rep=1000)
         elif self.mean_estimator == "rbb":
             self.mean_t = self.DependentBootstrapMean(returns=returns,
-                                                 boot_method=self.mean_estimator,
-                                                 Bsize=50,
-                                                 rep=1000,
-                                                 max_p=50,
-                                                 max_q=50)
+                                                      boot_method=self.mean_estimator,
+                                                      Bsize=50,
+                                                      rep=1000,
+                                                      max_p=4)
         else:
             raise NotImplementedError
         self.means.append(self.mean_t[None, :])
@@ -82,18 +81,17 @@ class RPO(Estimators):
         # covariance estimator
         if self.covariance_estimator == "mle":
             self.cov_t = self.MLECovariance(returns)
-        elif (self.covariance_estimator == "cbb") or (self.covariance_estimator == "nobb"):
-            cov_t = self.DependentBootstrapCovariance(returns=returns,
-                                                      boot_method=self.covariance_estimator,
-                                                      Bsize=50,
-                                                      rep=1000)
+        elif (self.covariance_estimator == "cbb") or (self.covariance_estimator == "nobb") or (self.covariance_estimator == "sb"):
+            self.cov_t = self.DependentBootstrapCovariance(returns=returns,
+                                                           boot_method=self.covariance_estimator,
+                                                           Bsize=50,
+                                                           rep=1000)
         elif self.covariance_estimator == "rbb":
             self.cov_t = self.DepenBootstrapCovariance(returns=returns,
-                                                  boot_method=self.covariance_estimator,
-                                                  Bsize= 50,
-                                                  rep = 1000,
-                                                  max_p= 50,
-                                                  max_q= 50)
+                                                       boot_method=self.covariance_estimator,
+                                                       Bsize= 50,
+                                                       rep = 1000,
+                                                       max_p= 4)
         else:
             raise NotImplementedError
         self.covs.append(self.cov_t)
@@ -118,23 +116,23 @@ class RPO(Estimators):
         # max w^{\top}\bar{u} - (\kappa)*\sqrt(w^{\top} \Omega w) - \frac{\lambda}{2}w^{\top} \Sigma w
         # Problem
         def objective(weights):
-            return -(np.dot(mean_t, weights) - uncertainty_aversion*np.sqrt(np.dot(weights,np.dot(omega_t,weights))) - (self.risk_aversion/2)*np.dot(weights,np.dot(cov_t,weights)))
+            return np.dot(mean_t, weights) - uncertainty_aversion*np.sqrt(np.dot(weights,np.dot(omega_t,weights))) - (self.risk_aversion/2)*np.dot(weights,np.dot(cov_t,weights))
 
         if long_only:
             constraints = [
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # The weights sum to one
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
             ]
             bounds = [(0, None) for _ in range(K)]
+
+            w0 = np.random.uniform(0, 1, size=K)
         else:
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
-                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1},  # the sum of absolute weights is one
-                {'type': 'eq', 'fun': lambda x: np.linalg.norm(x) - 1}  # the norm L2 is one
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1},  # the weights sum to zero
             ]
-            bounds = None
+            bounds = [(-1, 1) for _ in range(K)]
 
-        # initial guess for the weights
-        w0 = np.random.uniform(size=K)
+            w0 = np.random.uniform(-1, 1, size=K)
 
         # Perform the optimization
         opt_output = opt.minimize(self.objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')
