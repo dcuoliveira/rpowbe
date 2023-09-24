@@ -42,7 +42,7 @@ class MD(Estimators):
         # covariance estimator
         if self.covariance_estimator == "mle":
             cov_t = self.MLECovariance(returns)
-        elif (self.mean_estimator == "cbb") or (self.mean_estimator == "nobb") or (self.mean_estimator == "sb"):
+        elif (self.covariance_estimator == "cbb") or (self.covariance_estimator == "nobb") or (self.covariance_estimator == "sb"):
             cov_t = self.DependentBootstrapCovariance(returns=returns,
                                                       boot_method=self.covariance_estimator,
                                                       Bsize=50,
