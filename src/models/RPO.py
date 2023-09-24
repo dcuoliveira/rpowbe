@@ -70,10 +70,11 @@ class RPO(Estimators):
                                                       rep=1000)
         elif self.mean_estimator == "rbb":
             self.mean_t = self.DependentBootstrapMean(returns=returns,
-                                                      boot_method=self.mean_estimator,
-                                                      Bsize=50,
-                                                      rep=1000,
-                                                      max_p=4)
+                                                 boot_method=self.mean_estimator,
+                                                 Bsize=50,
+                                                 rep=1000,
+                                                 max_p=50,
+                                                 max_q=50)
         else:
             raise NotImplementedError
         self.means.append(self.mean_t[None, :])
@@ -88,10 +89,11 @@ class RPO(Estimators):
                                                            rep=1000)
         elif self.covariance_estimator == "rbb":
             self.cov_t = self.DepenBootstrapCovariance(returns=returns,
-                                                       boot_method=self.covariance_estimator,
-                                                       Bsize= 50,
-                                                       rep = 1000,
-                                                       max_p= 4)
+                                                  boot_method=self.covariance_estimator,
+                                                  Bsize= 50,
+                                                  rep = 1000,
+                                                  max_p= 50,
+                                                  max_q= 50)
         else:
             raise NotImplementedError
         self.covs.append(self.cov_t)
@@ -112,12 +114,7 @@ class RPO(Estimators):
             self.uncertainty_aversion = chi2.ppf(1 - eta, df = K)
         else:
             raise NotImplementedError
-
-        # max w^{\top}\bar{u} - (\kappa)*\sqrt(w^{\top} \Omega w) - \frac{\lambda}{2}w^{\top} \Sigma w
-        # Problem
-        def objective(weights):
-            return np.dot(mean_t, weights) - uncertainty_aversion*np.sqrt(np.dot(weights,np.dot(omega_t,weights))) - (self.risk_aversion/2)*np.dot(weights,np.dot(cov_t,weights))
-
+        
         if long_only:
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one

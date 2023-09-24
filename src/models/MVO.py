@@ -36,7 +36,9 @@ class MVO(Estimators):
                   weights: torch.Tensor,
                   maximize: bool=True) -> torch.Tensor:
         
-        return -(np.dot(self.mean_t, weights) + ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights))))
+        c = -1 if maximize else 1
+        
+        return (np.dot(self.mean_t, weights) - ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights)))) * c
 
     def forward(self,
                 returns: torch.Tensor,
