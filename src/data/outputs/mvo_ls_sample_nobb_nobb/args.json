@@ -1,0 +1,1 @@
+{"model_name": "mvo_ls_sample_nobb_nobb", "num_timesteps_in": 756, "num_timesteps_out": 1, "use_small_data": false, "use_sample_data": true, "all_years": false, "long_only": false, "mean_estimator": "nobb", "covariance_estimator": "nobb"}
