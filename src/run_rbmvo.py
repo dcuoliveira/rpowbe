@@ -5,7 +5,7 @@ import argparse
 import json
 from tqdm import tqdm
 
-from models.MD import MD
+from models.RBMVO import RBMVO
 from data.CRSPSimple import CRSPSimple
 from utils.dataset_utils import create_rolling_window_ts
 from loss_functions.SharpeLoss import SharpeLoss
@@ -13,20 +13,21 @@ from utils.conn_data import save_result_in_blocks
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="md")
+parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="rbmvo")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 3)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
-parser.add_argument('--use_small_data', type=bool, help='use small sample stocks data', default=True)
+parser.add_argument('--use_small_data', type=bool, help='use small sample stocks data', default=False)
 parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
 parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
 parser.add_argument('-lo', '--long_only', type=bool, help='consider long only constraint on the optimization', default=False)
-parser.add_argument('-cove', '--covariance_estimator', type=str, help='name of the estimator to be used for the covariance of the returns', default="mle")
+parser.add_argument('-meane', '--mean_estimator', type=str, help='name of the estimator to be used for the expected returns', default="cbb")
+parser.add_argument('-cove', '--covariance_estimator', type=str, help='name of the estimator to be used for the covariance of the returns', default="cbb")
 
 if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("Running script with the following parameters: model_name: {}, use_small_data {}, use_sample_data: {}, all_years: {}, long_only: {}, covariance_estimator: {}".format(args.model_name, args.use_small_data, args.use_sample_data, args.all_years, args.long_only, args.covariance_estimator))
+    print("Running script with the following parameters: model_name: {}, use_small_data {}, use_sample_data: {}, all_years: {}, long_only: {}, mean_estimator: {}, covariance_estimator: {}".format(args.model_name, args.use_small_data, args.use_sample_data, args.all_years, args.long_only, args.mean_estimator, args.covariance_estimator))
 
     model_name = args.model_name
     train_ratio = 0.6
@@ -38,7 +39,10 @@ if __name__ == "__main__":
     use_sample_data = args.use_sample_data
     all_years = args.all_years
     long_only = args.long_only
+    mean_estimator = args.mean_estimator
     covariance_estimator = args.covariance_estimator
+
+    print("Running script with the following parameters: model_name: {}, use_small_data {}, use_sample_data: {}, all_years: {}, long_only: {}, mean_estimator: {}, covariance_estimator: {}".format(model_name, use_small_data, use_sample_data, all_years, long_only, mean_estimator, covariance_estimator))
 
     # add tag for long only or long-short portfolios
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
@@ -48,9 +52,12 @@ if __name__ == "__main__":
     # add tag for sample data
     model_name = "{}_sample".format(model_name) if use_sample_data else model_name
 
+    # add mean estimator tag to name
+    model_name = "{model_name}_{mean_estimator}".format(model_name=model_name, mean_estimator=mean_estimator)
+
     # add covariance estimator tag to name
     model_name = "{model_name}_{covariance_estimator}".format(model_name=model_name, covariance_estimator=covariance_estimator)
-
+    
     args.model_name = model_name
 
     # relevant paths
@@ -71,7 +78,8 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = MD(covariance_estimator=covariance_estimator)
+    model = RBMVO(mean_estimator=mean_estimator,
+                covariance_estimator=covariance_estimator)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()
@@ -116,7 +124,7 @@ if __name__ == "__main__":
     results = {
         
         "model": model,
-        "means": None,
+        "means": torch.vstack(model.means),
         "covs": torch.stack(model.covs),
         "train_loss": None,
         "eval_loss": None,

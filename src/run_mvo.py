@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="mvo")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 3)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
-parser.add_argument('--use_small_data', type=bool, help='use small sample stocks data', default=False)
+parser.add_argument('--use_small_data', type=bool, help='use small sample stocks data', default=True)
 parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
 parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
 parser.add_argument('-lo', '--long_only', type=bool, help='consider long only constraint on the optimization', default=False)
@@ -41,8 +41,6 @@ if __name__ == "__main__":
     long_only = args.long_only
     mean_estimator = args.mean_estimator
     covariance_estimator = args.covariance_estimator
-
-    print("Running script with the following parameters: model_name: {}, use_small_data {}, use_sample_data: {}, all_years: {}, long_only: {}, mean_estimator: {}, covariance_estimator: {}".format(model_name, use_small_data, use_sample_data, all_years, long_only, mean_estimator, covariance_estimator))
 
     # add tag for long only or long-short portfolios
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)

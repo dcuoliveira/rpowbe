@@ -60,8 +60,7 @@ class MVO(Estimators):
                                                     boot_method=self.mean_estimator,
                                                     Bsize=50,
                                                     rep=1000,
-                                                    max_p=50,
-                                                    max_q=50)
+                                                    max_p=4)
         else:
             raise NotImplementedError
         self.means.append(self.mean_t[None, :])
@@ -79,8 +78,7 @@ class MVO(Estimators):
                                                        boot_method=self.covariance_estimator,
                                                        Bsize= 50,
                                                        rep=1000,
-                                                       max_p= 50,
-                                                       max_q= 50)
+                                                       max_p= 4)
         else:
             raise NotImplementedError
         self.covs.append(self.cov_t)
