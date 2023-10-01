@@ -93,8 +93,13 @@ class DependentBootstrapSampling:
                 new_observation = self.Model.forecast(sampled_data[j:(j + self.P),:],1)
                 new_observation = new_observation + random_residuals[j,:]
                 sampled_data = np.vstack([sampled_data,new_observation])
-        #
-        return torch.Tensor(sampled_data)
+
+            return torch.Tensor(sampled_data)
+
+        elif self.boot_method == "sb":
+            sampled_data = torch.vstack(self.Blocks)
+            
+            return torch.Tensor(sampled_data)
     
     def create_blocks(self) -> None:
         """
@@ -132,8 +137,8 @@ class DependentBootstrapSampling:
         while total < N:
 
             # write me a line of code to generate a random integer number between 1 and N
+            I = random.randint(1, N)
             L = np.random.geometric(p=0.5, size=1)[0]
-            I = random.randint(0, N - L)
 
             Block = self.time_series[I:(I + L), :]
             Block_sets.append(Block)
