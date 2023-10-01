@@ -70,14 +70,14 @@ def save_result_in_blocks(results, args, path):
 
                     "means": results["means"][start:end],
                 }
-                save_pickle(obj=tmp_means, path=os.path.join(path, "means_{}.pickle".format(y)))
+                # save_pickle(obj=tmp_means, path=os.path.join(path, "means_{}.pickle".format(y)))
 
             if (results["covs"] is not None):
                 tmp_covs = {
 
                     "covs": results["covs"][start:end]
                 }
-                save_pickle(obj=tmp_covs, path=os.path.join(path, "covs_{}.pickle".format(y)))
+                # save_pickle(obj=tmp_covs, path=os.path.join(path, "covs_{}.pickle".format(y)))
 
             start = end
             end += parts
