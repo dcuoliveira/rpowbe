@@ -60,23 +60,26 @@ class RBMVO(Estimators):
            
 
         theta = torch.Tensor(np.random.uniform(-1, 1, size = K))
-        # FIROZE optimization proposal
+        # Nick's optimization proposal
         step = 0.01 # -> for gradient descent
         alpha = 0.95
         eps = 1e-6
         num_iter = 100
         while num_iter != 0:
+
             # compute utilities for all bootstraps
             bootstrap_utilities = list()
             for idx in range(len(self.list_mean_covs)):
                 mean_i,cov_i = self.list_mean_covs[idx]
                 utility = torch.matmul(theta,mean_i) - self.risk_aversion*torch.matmul(theta,torch.matmul(cov_i,theta))
                 bootstrap_utilities.append(utility.item())
+
             # sort the utilities  with index
             idxs_bootstrap_utilities_sorted = sorted(range(len(bootstrap_utilities)), key=lambda k: bootstrap_utilities[k])
             idx_IC = idxs_bootstrap_utilities_sorted[int(alpha*self.num_boot)]
+
             # compute the derivative
-            mean_IC,cov_IC = self.list_mean_covs[idx_IC] 
+            mean_IC, cov_IC = self.list_mean_covs[idx_IC] 
             d_utility_theta = mean_IC - 2*self.risk_aversion*torch.matmul(cov_IC,theta)
             new_theta = theta + step*d_utility_theta
             if torch.sum(torch.abs(theta - new_theta)) < eps:
