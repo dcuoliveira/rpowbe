@@ -37,6 +37,7 @@ if __name__ == "__main__":
     all_years = args.all_years
     long_only = args.long_only
     mean_cov_estimator = args.mean_cov_estimator
+    alpha = 0.95
 
     print("Running script with the following parameters: model_name: {}, use_small_data {}, use_sample_data: {}, all_years: {}, long_only: {}, mean_cov_estimator: {}".format(model_name, use_small_data, use_sample_data, all_years, long_only, mean_cov_estimator))
 
@@ -71,7 +72,7 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = RBMVO(mean_cov_estimator=mean_cov_estimator)
+    model = RBMVO(mean_cov_estimator=mean_cov_estimator, alpha=alpha)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()
