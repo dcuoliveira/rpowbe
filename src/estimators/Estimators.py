@@ -182,7 +182,7 @@ class Estimators:
         list_mean_covs = list()
         for _ in range(rep):
             boot_returns = sampler.sample()
-            list_mean_covs.append((self.MLEMean(boot_returns),self.MLECovariance(boot_returns)))
+            list_mean_covs.append((self.MLEMean(boot_returns), self.MLECovariance(boot_returns)))
             
         # return the list of mean and covariance matrices
         return list_mean_covs
