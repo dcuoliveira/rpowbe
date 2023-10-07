@@ -13,7 +13,7 @@ from utils.conn_data import save_result_in_blocks
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="rbmvo")
+parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="rbmvog")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 3)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
 parser.add_argument('--use_small_data', type=bool, help='use small sample stocks data', default=False)
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         X_t = X_steps[step, :, :]
         returns_t1 = returns_steps[step, :, :]
 
-        weights_t1 = model.forward(returns=X_t, num_timesteps_out=num_timesteps_out, long_only=long_only)
+        weights_t1 = model.forward_gradient(returns=X_t, num_timesteps_out=num_timesteps_out, long_only=long_only)
         test_weights[step, :, :] = weights_t1
 
         loss = lossfn(weights=weights_t1, returns=returns_t1)
