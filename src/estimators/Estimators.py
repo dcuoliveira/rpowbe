@@ -66,8 +66,7 @@ class Estimators:
                                boot_method: str = "cbb",
                                Bsize: int = 50,
                                rep: int = 1000,
-                               max_p: int = 50,
-                               alpha: float = 0.025) -> torch.Tensor:
+                               max_p: int = 50) -> torch.Tensor:
         """ 
         Method to compute the bootstrap mean of the returns.
         
@@ -78,10 +77,9 @@ class Estimators:
             rep (int): number of bootstrap samplings to get.
             max_p (int): maximum order of the AR(p) part of the ARIMA model. Only used when boot_method = "model-based".
             max_q (int): maximum order of the MA(q) part of the ARIMA model. Only used when boot_method = "model-based".
-            alpha: quantile position
 
         Returns:
-            mean (torch.tensor): alpha-quantil dependent bootstrap estimates for the mean of the returns.
+            mean (torch.tensor): dependent bootstrap estimates for the mean of the returns.
         """
         
         sampler = DependentBootstrapSampling(time_series=returns,
@@ -110,8 +108,7 @@ class Estimators:
                                      boot_method: str = "cbb",
                                      Bsize: int = 50,
                                      rep: int = 1000,
-                                     max_p: int = 50,
-                                     alpha: float = 0.975) -> torch.Tensor:
+                                     max_p: int = 50) -> torch.Tensor:
         """
         Method to compute the bootstrap covariance of the returns.
 
@@ -122,10 +119,9 @@ class Estimators:
             rep (int): number of bootstrap samplings to get.
             max_p (int): maximum order of the AR(p) part of the ARIMA model. Only used when boot_method = "model-based".
             max_q (int): maximum order of the MA(q) part of the ARIMA model. Only used when boot_method = "model-based".
-            alpha: quantile position
 
         Returns:
-            cov (torch.tensor): alpha-quantil dependent bootstrap estimates for the covariance of the returns.
+            cov (torch.tensor): dependent bootstrap estimates for the covariance of the returns.
         """
         
         sampler = DependentBootstrapSampling(time_series=returns,
@@ -155,8 +151,7 @@ class Estimators:
                                      boot_method: str = "cbb",
                                      Bsize: int = 50,
                                      rep: int = 1000,
-                                     max_p: int = 50,
-                                     alpha: float = 0.975) -> torch.Tensor:
+                                     max_p: int = 50) -> torch.Tensor:
         """
         Method to compute the bootstrap mean and covariance of the returns.
 
@@ -167,11 +162,10 @@ class Estimators:
             rep (int): number of bootstrap samplings to get.
             max_p (int): maximum order of the AR(p) part of the ARIMA model. Only used when boot_method = "model-based".
             max_q (int): maximum order of the MA(q) part of the ARIMA model. Only used when boot_method = "model-based".
-            alpha: quantile position
 
         Returns: a list of pairs containig:
-            mean (torch.tensor):alpha-quantil dependent bootstrap estimates for the mean of the returns.
-            cov (torch.tensor): alpha-quantil dependent bootstrap estimates for the covariance of the returns.
+            mean (torch.tensor): dependent bootstrap estimates for the mean of the returns.
+            cov (torch.tensor): dependent bootstrap estimates for the covariance of the returns.
         """
         
         sampler = DependentBootstrapSampling(time_series=returns,
