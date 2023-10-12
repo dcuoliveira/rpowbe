@@ -24,7 +24,6 @@ if __name__ == "__main__":
     # relevant paths
     source_path = os.path.dirname(__file__)
     inputs_path = os.path.join(source_path, "data", "inputs")
-    use_small_data = args.use_small_data
 
     model_name = "{}_lo".format(args.model_name)
 
@@ -35,7 +34,7 @@ if __name__ == "__main__":
     args.model_name = model_name
 
     # prepare dataset
-    loader = CRSPSimple(use_small_data=use_small_data, use_sample_data=args.use_sample_data, all_years=args.all_years)
+    loader = CRSPSimple(use_small_data=args.use_small_data, use_sample_data=args.use_sample_data, all_years=args.all_years)
     returns = loader.returns.T
     features = loader.features
     features = features.reshape(features.shape[0], features.shape[1] * features.shape[2]).T    
