@@ -7,22 +7,23 @@ import json
 from models.EW import EW
 from data.CRSPSimple import CRSPSimple
 from utils.conn_data import save_result_in_blocks
+from utils.dataset_utils import check_bool
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--model_name', type=str, help='model name to be used for saving the model', default="ew")
-parser.add_argument('--use_small_data', type=bool, help='use sample stocks data', default=False)
-parser.add_argument('--use_sample_data', type=bool, help='use sample stocks data', default=True)
-parser.add_argument('--all_years', type=bool, help='use all years to build dataset', default=False)
+parser.add_argument('--use_small_data', type=str, help='use sample stocks data', default="False")
+parser.add_argument('--use_sample_data', type=str, help='use sample stocks data', default="True")
+parser.add_argument('--all_years', type=str, help='use all years to build dataset', default="False")
 
 if __name__ == "__main__":
 
     args = parser.parse_args()
 
     model_name = args.model_name
-    use_small_data = args.use_small_data
-    use_sample_data = args.use_sample_data
-    all_years = args.all_years
+    use_small_data = check_bool(args.use_small_data)
+    use_sample_data = check_bool(args.use_sample_data)
+    all_years = check_bool(args.all_years)
 
     print("Running script with the following parameters: model_name: {}, use_small_data {}, use_sample_data: {}, all_years: {}".format(model_name, use_small_data, use_sample_data, all_years))
 
