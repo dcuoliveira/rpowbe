@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from models.RBMVO import RBMVO
 from data.CRSPSimple import CRSPSimple
-from utils.dataset_utils import create_rolling_window_ts
+from utils.dataset_utils import create_rolling_window_ts, check_bool
 from loss_functions.SharpeLoss import SharpeLoss
 from utils.conn_data import save_result_in_blocks
 
@@ -16,10 +16,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="rbmvo")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 3)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
-parser.add_argument('--use_small_data', type=bool, help='use small sample stocks data', default=False)
-parser.add_argument('-usd', '--use_sample_data', type=bool, help='use sample stocks data', default=True)
-parser.add_argument('-ay', '--all_years', type=bool, help='use all years to build dataset', default=False)
-parser.add_argument('-lo', '--long_only', type=bool, help='consider long only constraint on the optimization', default=False)
+parser.add_argument('--use_small_data', type=str, help='use small sample stocks data', default="False")
+parser.add_argument('-usd', '--use_sample_data', type=str, help='use sample stocks data', default="True")
+parser.add_argument('-ay', '--all_years', type=str, help='use all years to build dataset', default="False")
+parser.add_argument('-lo', '--long_only', type=str, help='consider long only constraint on the optimization', default="False")
 parser.add_argument('-meancove', '--mean_cov_estimator', type=str, help='name of the estimator to be used for the expected returns', default="cbb")
 
 if __name__ == "__main__":
@@ -32,10 +32,10 @@ if __name__ == "__main__":
     num_timesteps_out = args.num_timesteps_out
     fix_start = False
     drop_last = True
-    use_small_data = args.use_small_data
-    use_sample_data = args.use_sample_data
-    all_years = args.all_years
-    long_only = args.long_only
+    use_small_data = check_bool(args.use_small_data)
+    use_sample_data = check_bool(args.use_sample_data)
+    all_years = check_bool(args.all_years)
+    long_only = check_bool(args.long_only)
     mean_cov_estimator = args.mean_cov_estimator
     alpha = 0.95
 
