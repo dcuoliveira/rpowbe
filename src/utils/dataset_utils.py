@@ -3,6 +3,14 @@ import os
 import pandas as pd
 import torch
 
+def check_bool(str):
+    if str.lower() == "false":
+        return False
+    elif str.lower() == "true": 
+        return True
+    else:
+        raise Exception("Invalid boolean value: {}".format(str))
+
 def aggregate_results(path):
     files = glob.glob(os.path.join(path, "*.csv"))
 
