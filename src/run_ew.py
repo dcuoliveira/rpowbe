@@ -15,57 +15,63 @@ parser.add_argument('--use_small_data', type=bool, help='use sample stocks data'
 parser.add_argument('--use_sample_data', type=bool, help='use sample stocks data', default=True)
 parser.add_argument('--all_years', type=bool, help='use all years to build dataset', default=False)
 
-args = parser.parse_args()
+if __name__ == "__main__":
 
-# relevant paths
-source_path = os.path.dirname(__file__)
-inputs_path = os.path.join(source_path, "data", "inputs")
+    args = parser.parse_args()
 
-model_name = "{}_lo".format(args.model_name)
+    model_name = args.model_name
+    use_small_data = args.use_small_data
+    use_sample_data = args.use_sample_data
+    all_years = args.all_years
 
-model_name = "{}_small".format(model_name) if args.use_small_data else model_name
+    print("Running script with the following parameters: model_name: {}, use_small_data {}, use_sample_data: {}, all_years: {}".format(model_name, use_small_data, use_sample_data, all_years))
 
-model_name = "{}_sample".format(model_name) if args.use_sample_data else model_name
+    model_name = "{}_lo".format(model_name)
+    model_name = "{}_small".format(model_name) if use_small_data else model_name
+    model_name = "{}_sample".format(model_name) if use_sample_data else model_name
+    args.model_name = model_name
 
-args.model_name = model_name
+    # relevant paths
+    source_path = os.path.dirname(__file__)
+    inputs_path = os.path.join(source_path, "data", "inputs")
 
-# prepare dataset
-loader = CRSPSimple(use_small_data=args.use_small_data, use_sample_data=args.use_sample_data, all_years=args.all_years)
-returns = loader.returns.T
-features = loader.features
-features = features.reshape(features.shape[0], features.shape[1] * features.shape[2]).T    
+    # prepare dataset
+    loader = CRSPSimple(use_small_data=use_small_data, use_sample_data=use_sample_data, all_years=all_years)
+    returns = loader.returns.T
+    features = loader.features
+    features = features.reshape(features.shape[0], features.shape[1] * features.shape[2]).T    
 
-# call model
-model = EW()
+    # call model
+    model = EW()
 
-# compute weights
-weights = model.forward(returns)
+    # compute weights
+    weights = model.forward(returns)
 
-# save results
-returns_df = pd.DataFrame(returns.numpy(), index=loader.index, columns=loader.columns)
-weights_df = pd.DataFrame(weights.numpy(), index=loader.index, columns=loader.columns)
-
-melt_returns_df = returns_df.reset_index().melt("index").rename(columns={"index": "date", "variable": "ticker", "value": "returns"})
-melt_weights_df = weights_df.reset_index().melt("index").rename(columns={"index": "date", "variable": "ticker", "value": "weights"})
-summary_df = pd.merge(melt_returns_df, melt_weights_df, on=["date", "ticker"], how="inner")
-
-results = {
+    # save results
+    returns_df = pd.DataFrame(returns.numpy(), index=loader.index, columns=loader.columns)
+    weights_df = pd.DataFrame(weights.numpy(), index=loader.index, columns=loader.columns)
     
-    "model": model,
-    "means": None,
-    "covs": None,
-    "train_loss": None,
-    "eval_loss": None,
-    "test_loss": None,
-    "returns": returns_df,
-    "weights": weights_df,
-    "summary": summary_df
+    melt_returns_df = returns_df.reset_index().melt("index").rename(columns={"index": "date", "variable": "ticker", "value": "returns"})
+    melt_weights_df = weights_df.reset_index().melt("index").rename(columns={"index": "date", "variable": "ticker", "value": "weights"})
+    summary_df = pd.merge(melt_returns_df, melt_weights_df, on=["date", "ticker"], how="inner")
 
-    }
+    results = {
+        
+        "model": model,
+        "means": None,
+        "covs": None,
+        "train_loss": None,
+        "eval_loss": None,
+        "test_loss": None,
+        "returns": returns_df,
+        "weights": weights_df,
+        "summary": summary_df
 
-output_path = os.path.join(os.path.dirname(__file__),
-                            "data",
-                            "outputs",
-                            model_name)
-
-save_result_in_blocks(results=results, args=args, path=output_path)
+        }
+    
+    output_path = os.path.join(os.path.dirname(__file__),
+                               "data",
+                               "outputs",
+                               model_name)
+    
+    save_result_in_blocks(results=results, args=args, path=output_path)
