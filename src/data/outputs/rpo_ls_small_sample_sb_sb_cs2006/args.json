@@ -1,1 +1,0 @@
-{"model_name": "rpo", "num_timesteps_in": 756, "num_timesteps_out": 1, "use_small_data": true, "use_sample_data": true, "all_years": false, "long_only": false, "mean_estimator": "sb", "covariance_estimator": "sb", "uncertainty_aversion_estimator": "ceria-stubbs-2006"}

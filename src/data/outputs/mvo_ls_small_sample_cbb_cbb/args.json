@@ -1,1 +1,0 @@
-{"model_name": "mvo_ls_small_sample_cbb_cbb", "num_timesteps_in": 756, "num_timesteps_out": 1, "use_small_data": true, "use_sample_data": true, "all_years": false, "long_only": false, "mean_estimator": "cbb", "covariance_estimator": "cbb"}
