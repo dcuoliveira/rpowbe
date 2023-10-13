@@ -11,8 +11,8 @@ class RBMVO(Estimators, Functionals):
                  mean_cov_estimator: str="mle",
                  num_boot: int = 200,
                  alpha: float = 0.95,
-                 mean_functional: str="means",
-                 cov_functional: str="eingenvalues") -> None:
+                 mean_functional: str=None,
+                 cov_functional: str=None) -> None:
         """"
         This function impements the robust version of the mean-variance optimization (MVO) method proposed by Markowitz (1952).
         It intends to be robust in two senses:
@@ -49,6 +49,9 @@ class RBMVO(Estimators, Functionals):
         self.mean_functional = mean_functional
         self.cov_functional = cov_functional
 
+        if self.mean_functional == self.cov_functional:
+            self.functional = self.mean_functional
+
     def objective(self,
                   weights: torch.Tensor,
                   maximize: bool=True) -> torch.Tensor:
@@ -73,6 +76,7 @@ class RBMVO(Estimators, Functionals):
                                                                          Bsize=50,
                                                                          rep=self.num_boot)
         
+        # compute the means and eigenvalues, and select the alpha-percentile of them
         self.mean_t = self.apply_functional(x=[val[0] for val in self.list_mean_covs], func=self.mean_functional)
         self.cov_t = self.apply_functional(x=[val[1] for val in self.list_mean_covs], func=self.cov_functional)
 
@@ -103,7 +107,7 @@ class RBMVO(Estimators, Functionals):
                          num_timesteps_out: int,
                          long_only: bool=True) -> torch.Tensor:
         
-        K = returns.shape[1]
+        self.K = returns.shape[1]
 
         # mean and cov estimates
         if self.mean_cov_estimator == "mle":
@@ -115,26 +119,17 @@ class RBMVO(Estimators, Functionals):
                                                                          rep=self.num_boot)
            
 
-        wt = torch.Tensor(np.random.uniform(-1, 1, size = K))
+        wt = torch.Tensor(np.random.uniform(-1, 1, size = self.K))
         # Nick's optimization proposal
         step = 0.01 # -> for gradient descent
         eps = 1e-6
         num_iter = 100
         while num_iter != 0:
+            
+            # compute the utilities and select the alpha-percentile
+            mean_IC, cov_IC = self.apply_functional(x=self.list_mean_covs, func=self.functional)
 
-            # compute utilities for all bootstraps
-            bootstrap_utilities = list()
-            for idx in range(len(self.list_mean_covs)):
-                mean_i, cov_i = self.list_mean_covs[idx]
-                utility = torch.matmul(wt, mean_i) - self.risk_aversion*torch.matmul(wt, torch.matmul(cov_i, wt))
-                bootstrap_utilities.append(utility.item())
-
-            # sort the utilities  with index
-            idxs_bootstrap_utilities_sorted = sorted(range(len(bootstrap_utilities)), key=lambda k: bootstrap_utilities[k])
-            idx_IC = idxs_bootstrap_utilities_sorted[int(self.alpha*self.num_boot)]
-
-            # compute the derivative
-            mean_IC, cov_IC = self.list_mean_covs[idx_IC] 
+            # # compute the derivative
             d_utility_theta = mean_IC - 2*self.risk_aversion*torch.matmul(cov_IC, wt)
             new_wt = wt + step*d_utility_theta
             if torch.sum(torch.abs(wt - new_wt)) < eps:
