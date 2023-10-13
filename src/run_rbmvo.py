@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="rbmvo")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 3)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
-parser.add_argument('--use_small_data', type=str, help='use small sample stocks data', default="False")
+parser.add_argument('--use_small_data', type=str, help='use small sample stocks data', default="True")
 parser.add_argument('-usd', '--use_sample_data', type=str, help='use sample stocks data', default="True")
 parser.add_argument('-ay', '--all_years', type=str, help='use all years to build dataset', default="False")
 parser.add_argument('-lo', '--long_only', type=str, help='consider long only constraint on the optimization', default="False")
@@ -38,6 +38,8 @@ if __name__ == "__main__":
     long_only = check_bool(args.long_only)
     mean_cov_estimator = args.mean_cov_estimator
     alpha = 0.95
+    mean_functional = "means"
+    cov_functional = "eigenvalues"
 
     print("Running script with the following parameters: model_name: {}, use_small_data {}, use_sample_data: {}, all_years: {}, long_only: {}, mean_cov_estimator: {}".format(model_name, use_small_data, use_sample_data, all_years, long_only, mean_cov_estimator))
 
@@ -72,7 +74,7 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = RBMVO(mean_cov_estimator=mean_cov_estimator, alpha=alpha)
+    model = RBMVO(mean_cov_estimator=mean_cov_estimator, alpha=alpha, mean_functional=mean_functional, cov_functional=cov_functional)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()
