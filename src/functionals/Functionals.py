@@ -1,5 +1,6 @@
 import torch
 from numpy.linalg import eig
+import numpy as np
 
 class Functionals:
     def __init__(self, alpha: float=0.95) -> None:
@@ -43,6 +44,28 @@ class Functionals:
         means_vec = torch.mean(torch.stack(x), axis=1)
 
         return means_vec
+    
+    def utility(self, x: list) -> torch.tensor:
+        """
+        This function computes the utility of a given portfolio.
+        
+        Args:
+            x (list): input list with mean (1st position) and cov (2nd position).
+            risk_aversion (float): risk aversion parameter. Defaults to 1.
+        Returns:
+            torch.tensor: utilities of x.
+        """
+
+        wt = torch.Tensor(np.random.uniform(-1, 1, size = self.K))
+
+        # compute utilities for all bootstraps
+        utilities = list()
+        for idx in range(len(x)):
+            mean_i, cov_i = x[idx]
+            utility = torch.matmul(wt, mean_i) - self.risk_aversion*torch.matmul(wt, torch.matmul(cov_i, wt))
+            utilities.append(utility.item())
+
+        return utilities
 
     def percentile(self, x: torch.tensor, scores: torch.tensor, alpha: float=0.95) -> float:
         """
@@ -54,6 +77,8 @@ class Functionals:
         Returns:
             float: alpha-percentile of x.
         """
+
+        # n is typically the numbre of bootstrap samples
         n = len(x)
 
         scores_idx = sorted(range(len(scores)), key=lambda k: scores[k])
@@ -77,6 +102,10 @@ class Functionals:
             scores = self.eigenvalues(x)
         elif func == "means":
             scores = self.means(x)
+        elif func == "utility":
+            scores = self.utility(x)
+        else:
+            raise ValueError("Functional not implemented.")
 
         x_selected = self.percentile(x, scores, alpha=self.alpha)
         
