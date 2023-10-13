@@ -2,15 +2,17 @@ import torch
 import numpy as np
 import scipy.optimize as opt
 
-
 from estimators.Estimators import Estimators
+from functionals.Functionals import Functionals
 
-class RBMVO(Estimators):
+class RBMVO(Estimators, Functionals):
     def __init__(self,
                  risk_aversion: float=1,
                  mean_cov_estimator: str="mle",
                  num_boot: int = 200,
-                 alpha: float = 0.95) -> None:
+                 alpha: float = 0.95,
+                 mean_functional: str="means",
+                 cov_functional: str="eingenvalues") -> None:
         """"
         This function impements the robust version of the mean-variance optimization (MVO) method proposed by Markowitz (1952).
         It intends to be robust in two senses:
@@ -25,19 +27,27 @@ class RBMVO(Estimators):
                                    According to Ang (2014), the risk aversion parameter of a risk neutral individual ranges from 1 and 10.
             mean_estimator (str): mean estimator to be used. Defaults to "mle", which defines the maximum likelihood estimator.
             covariance_estimator (str): covariance estimator to be used. Defaults to "mle", which defines the maximum likelihood estimator.
-
+            num_boot (int): number of bootstrap samples to be used. Defaults to 200.
+            alpha (float): percentile. Defaults to 0.95.
+            mean_functional (str): functional to be used to rank the mean of the returns. Defaults to "means".
+            cov_functional (str): functional to be used to rank the covariance of the returns. Defaults to "eigenvalues".
+            
         References:
         Markowitz, H. (1952) Portfolio Selection. The Journal of Finance.
         Ang, Andrew, (2014). Asset Management: A Systematic Approach to Factor Investing. Oxford University Press. 
         """
-        super().__init__()
+
+        Estimators.__init__(self)
+
+        Functionals.__init__(self, alpha=alpha)
         
         self.risk_aversion = risk_aversion
         self.mean_cov_estimator = mean_cov_estimator 
         self.covariance_estimator = mean_cov_estimator
         self.num_boot = num_boot
-        self.alpha = alpha
         self.list_mean_covs = list()
+        self.mean_functional = mean_functional
+        self.cov_functional = cov_functional
 
     def objective(self,
                   weights: torch.Tensor,
@@ -63,20 +73,8 @@ class RBMVO(Estimators):
                                                                          Bsize=50,
                                                                          rep=self.num_boot)
         
-        wt = torch.Tensor(np.random.uniform(-1, 1, size = K))
-        # compute utilities for all bootstraps
-        bootstrap_utilities = list()
-        for idx in range(len(self.list_mean_covs)):
-            mean_i, cov_i = self.list_mean_covs[idx]
-            utility = torch.matmul(wt, mean_i) - self.risk_aversion*torch.matmul(wt, torch.matmul(cov_i, wt))
-            bootstrap_utilities.append(utility.item())
-            
-        # sort the utilities  with index
-        idxs_bootstrap_utilities_sorted = sorted(range(len(bootstrap_utilities)), key=lambda k: bootstrap_utilities[k])
-        idx_IC = idxs_bootstrap_utilities_sorted[int(self.alpha*self.num_boot)]
-
-        # compute the derivative
-        self.mean_t, self.cov_t = self.list_mean_covs[idx_IC] 
+        self.mean_t = self.apply_functional(x=[val[0] for val in self.list_mean_covs], func=self.mean_functional)
+        self.cov_t = self.apply_functional(x=[val[1] for val in self.list_mean_covs], func=self.cov_functional)
 
         if long_only:
             constraints = [
