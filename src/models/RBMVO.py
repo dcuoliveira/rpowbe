@@ -45,7 +45,8 @@ class RBMVO(Estimators, Functionals):
         self.mean_cov_estimator = mean_cov_estimator 
         self.covariance_estimator = mean_cov_estimator
         self.num_boot = num_boot
-        self.list_mean_covs = list()
+        self.means = list()
+        self.covs = list()
         self.mean_functional = mean_functional
         self.cov_functional = cov_functional
 
@@ -79,6 +80,9 @@ class RBMVO(Estimators, Functionals):
         # compute the means and eigenvalues, and select the alpha-percentile of them
         self.mean_t = self.apply_functional(x=[val[0] for val in self.list_mean_covs], func=self.mean_functional)
         self.cov_t = self.apply_functional(x=[val[1] for val in self.list_mean_covs], func=self.cov_functional)
+
+        # self.mean.append(self.mean_t)
+        # self.cov.append(self.cov_t)
 
         if long_only:
             constraints = [
@@ -128,6 +132,9 @@ class RBMVO(Estimators, Functionals):
             
             # compute the utilities and select the alpha-percentile
             mean_IC, cov_IC = self.apply_functional(x=self.list_mean_covs, func=self.functional)
+
+            # self.mean.append(self.mean_t)
+            # self.cov.append(self.cov_t)
 
             # # compute the derivative
             d_utility_theta = mean_IC - 2*self.risk_aversion*torch.matmul(cov_IC, wt)
