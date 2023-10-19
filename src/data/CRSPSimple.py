@@ -16,7 +16,7 @@ class CRSPSimple(object):
     def __init__(self,
                  use_small_data: bool = False,
                  use_sample_data: bool = True,
-                 fields: list=["close"],
+                 fields: list=["currentAdjClose"],
                  all_years: bool = False,
                  tickers: list = crsp_stocks,
                  years: list=["2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"]):
@@ -38,7 +38,7 @@ class CRSPSimple(object):
                    years: list):
         
         if self.use_small_data:
-            crsp_df = pd.read_csv(os.path.join(self.inputs_path, "crsp_small_sample.csv"))
+            crsp_df = pd.read_csv(os.path.join(self.inputs_path, "crsp_small.csv"))
 
             crsp_df["date"] = pd.to_datetime(crsp_df["date"])
             crsp_df.set_index("date", inplace=True)            
@@ -63,6 +63,9 @@ class CRSPSimple(object):
                     tmp_df = pd.read_csv(f,
                                         compression='gzip',
                                         on_bad_lines='skip')
+                    
+                    tmp_df["currentAdjClose"] = (1 + tmp_df["pvCLCL"]) * tmp_df["prevAdjClose"]
+
                     tmp_df = tmp_df[["ticker"] + fields]
                     tmp_df["date"] = pd.to_datetime(f.split(os.sep)[-1].split(".")[0])
 
@@ -90,8 +93,8 @@ class CRSPSimple(object):
                 crsp_df = crsp_df[self.tickers]
 
             # check if file exists
-            if not os.path.exists(os.path.join(self.inputs_path, "crsp_simple_sample.csv")):
-                crsp_df.to_csv(os.path.join(self.inputs_path, "crsp_simple_sample.csv"))
+            if not os.path.exists(os.path.join(self.inputs_path, "crsp_small.csv")):
+                crsp_df.loc["2014-01-01":].to_csv(os.path.join(self.inputs_path, "crsp_small.csv"))
 
         # dataset processing 2
         ## compute returns and subset data
