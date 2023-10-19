@@ -79,13 +79,12 @@ class CRSPSimple(object):
             
             crsp_df.index.name = "date"
 
-            # subset data
-            if self.tickers is not None:
-                crsp_df = crsp_df[self.tickers]
+            ## compute log-returns
+            crsp_df = np.log(crsp_df).diff()
 
             # check if file exists
             if not os.path.exists(os.path.join(self.inputs_path, "crsp_small.csv")):
-                crsp_df.loc["2014-01-01":].to_csv(os.path.join(self.inputs_path, "crsp_small.csv"))
+                crsp_df[crsp_stocks].loc["2014-01-01":].to_csv(os.path.join(self.inputs_path, "crsp_small.csv"))
 
         # dataset processing 2
         ## compute returns and subset data
