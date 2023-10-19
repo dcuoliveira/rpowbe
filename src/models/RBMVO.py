@@ -45,8 +45,8 @@ class RBMVO(Estimators, Functionals):
         self.mean_cov_estimator = mean_cov_estimator 
         self.covariance_estimator = mean_cov_estimator
         self.num_boot = num_boot
-        self.means = list()
-        self.covs = list()
+        self.estimated_means = list()
+        self.estimated_covs = list()
         self.mean_functional = mean_functional
         self.cov_functional = cov_functional
 
@@ -66,7 +66,7 @@ class RBMVO(Estimators, Functionals):
                 num_timesteps_out: int,
                 long_only: bool=True):
              
-        K = returns.shape[1]
+        self.K = returns.shape[1]
 
         # mean and cov estimates
         if self.mean_cov_estimator == "mle":
@@ -88,17 +88,17 @@ class RBMVO(Estimators, Functionals):
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
             ]
-            bounds = [(0, None) for _ in range(K)]
+            bounds = [(0, None) for _ in range(self.K)]
 
-            w0 = np.random.uniform(0, 1, size=K)
+            w0 = np.random.uniform(0, 1, size=self.K)
         else:
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
                 {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1},  # the weights sum to zero
             ]
-            bounds = [(-1, 1) for _ in range(K)]
+            bounds = [(-1, 1) for _ in range(self.K)]
 
-            w0 = np.random.uniform(-1, 1, size=K)
+            w0 = np.random.uniform(-1, 1, size=self.K)
 
         # perform the optimization
         opt_output = opt.minimize(self.objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')

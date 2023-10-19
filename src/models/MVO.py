@@ -29,8 +29,8 @@ class MVO(Estimators):
         self.risk_aversion = risk_aversion
         self.mean_estimator = mean_estimator
         self.covariance_estimator = covariance_estimator
-        self.means = list()
-        self.covs = list()
+        self.estimated_means = list()
+        self.estimated_covs = list()
 
     def objective(self,
                   weights: torch.Tensor,
@@ -63,7 +63,7 @@ class MVO(Estimators):
                                                     max_p=4)
         else:
             raise NotImplementedError
-        self.means.append(self.mean_t[None, :])
+        self.estimated_means.append(self.mean_t[None, :])
 
         # covariance estimator
         if self.covariance_estimator == "mle":
@@ -81,7 +81,7 @@ class MVO(Estimators):
                                                        max_p= 4)
         else:
             raise NotImplementedError
-        self.covs.append(self.cov_t)
+        self.estimated_covs.append(self.cov_t)
 
         if long_only:
             constraints = [
