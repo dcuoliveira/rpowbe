@@ -15,7 +15,6 @@ class CRSPSimple(object):
     
     def __init__(self,
                  use_small_data: bool = False,
-                 use_sample_data: bool = True,
                  fields: list=["currentAdjClose"],
                  all_years: bool = False,
                  tickers: list = crsp_stocks,
@@ -23,7 +22,6 @@ class CRSPSimple(object):
         super().__init__()
 
         self.inputs_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "inputs")
-        self.use_sample_data = use_sample_data
         self.use_small_data = use_small_data
         self.fields = fields
         self.all_years = all_years
@@ -42,13 +40,6 @@ class CRSPSimple(object):
 
             crsp_df["date"] = pd.to_datetime(crsp_df["date"])
             crsp_df.set_index("date", inplace=True)            
-
-        elif self.use_sample_data:
-    
-            crsp_df = pd.read_csv(os.path.join(self.inputs_path, "crsp_sample.csv"))
-
-            crsp_df["date"] = pd.to_datetime(crsp_df["date"])
-            crsp_df.set_index("date", inplace=True)
         else:
             if self.all_years:
                 years = os.listdir(os.path.join(self.inputs_path, "US_CRSP_NYSE"))
