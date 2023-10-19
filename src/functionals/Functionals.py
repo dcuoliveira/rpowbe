@@ -16,7 +16,7 @@ class Functionals:
 
         self.alpha = alpha
 
-    def eigenvalues(self, x: torch.tensor) -> torch.tensor:
+    def eigenvalues(self, x: list) -> torch.tensor:
         """
         This function computes the eigenvalues of a given matrix.
 
@@ -31,12 +31,12 @@ class Functionals:
 
         return max_eigenvalues
 
-    def means(self, x: torch.tensor) -> torch.tensor:
+    def means(self, x: list) -> torch.tensor:
         """
         This function computes the means of a given matrix.
 
         Args:
-            x (torch.tensor): input matrix.
+            x (list): input matrix.
         Returns:
             torch.tensor: means of x.
         """
