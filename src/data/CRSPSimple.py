@@ -15,7 +15,7 @@ class CRSPSimple(object):
     
     def __init__(self,
                  use_small_data: bool = False,
-                 fields: list=["currentAdjClose"],
+                 fields: list=["pvCLCL"],
                  all_years: bool = False,
                  tickers: list = crsp_stocks,
                  years: list=["2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"]):
@@ -55,8 +55,6 @@ class CRSPSimple(object):
                                         compression='gzip',
                                         on_bad_lines='skip')
                     
-                    tmp_df["currentAdjClose"] = (1 + tmp_df["pvCLCL"]) * tmp_df["prevAdjClose"]
-
                     tmp_df = tmp_df[["ticker"] + fields]
                     tmp_df["date"] = pd.to_datetime(f.split(os.sep)[-1].split(".")[0])
 
@@ -79,12 +77,9 @@ class CRSPSimple(object):
             
             crsp_df.index.name = "date"
 
-            ## compute log-returns
-            crsp_df = np.log(crsp_df).diff()
-
             # check if file exists
             if not os.path.exists(os.path.join(self.inputs_path, "crsp_small.csv")):
-                crsp_df[crsp_stocks].loc["2014-01-01":].to_csv(os.path.join(self.inputs_path, "crsp_small.csv"))
+                crsp_df[crsp_stocks].to_csv(os.path.join(self.inputs_path, "crsp_small.csv"))
 
         # dataset processing 2
         ## compute returns and subset data
@@ -119,7 +114,7 @@ DEBUG = False
 
 if __name__ == "__main__":
     if DEBUG:
-        loader = CRSPSimple(use_sample_data=False,
+        loader = CRSPSimple(use_small_data=False,
                             fields=["pvCLCL"],
                             all_years=False,
                             tickers=crsp_stocks,
