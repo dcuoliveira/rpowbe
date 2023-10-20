@@ -110,7 +110,7 @@ class CRSPSimple(object):
         self.features = features
         self.returns = returns
     
-DEBUG = False
+DEBUG = True
 
 if __name__ == "__main__":
     if DEBUG:
