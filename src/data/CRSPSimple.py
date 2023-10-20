@@ -79,7 +79,7 @@ class CRSPSimple(object):
 
             # check if file exists
             if not os.path.exists(os.path.join(self.inputs_path, "crsp_small.csv")):
-                crsp_df[crsp_stocks].to_csv(os.path.join(self.inputs_path, "crsp_small.csv"))
+                crsp_df[self.tickers].to_csv(os.path.join(self.inputs_path, "crsp_small.csv"))
 
         # dataset processing 2
         ## compute returns and subset data
