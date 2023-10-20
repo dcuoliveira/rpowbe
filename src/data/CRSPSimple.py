@@ -1,9 +1,9 @@
 import os
-import numpy as np
 import torch
 import pandas as pd
 import glob
 from tqdm import tqdm
+import argparse
 
 from data.metadata import crsp_stocks
 
@@ -109,8 +109,16 @@ class CRSPSimple(object):
         self.A = A
         self.features = features
         self.returns = returns
-    
-DEBUG = False
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '--debug', type=str, help='To run in debug mode.', default="False")
+
+args = parser.parse_args()
+
+if args.debug == "False":
+    DEBUG = False
+else:
+    DEBUG = True
 
 if __name__ == "__main__":
     if DEBUG:
@@ -118,4 +126,4 @@ if __name__ == "__main__":
                             fields=["pvCLCL"],
                             all_years=False,
                             tickers=crsp_stocks,
-                            years=["2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"])
+                            years=["2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"])
