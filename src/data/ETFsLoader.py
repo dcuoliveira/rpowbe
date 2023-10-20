@@ -5,7 +5,7 @@ import glob
 from tqdm import tqdm
 import argparse
 
-class ETFs(object):
+class ETFsLoader(object):
     """
 
     
