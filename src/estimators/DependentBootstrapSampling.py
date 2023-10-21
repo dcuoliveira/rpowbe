@@ -3,12 +3,10 @@ import torch
 import math
 import random
 import numpy as np
-# Import Statsmodels for VAR
+
 from statsmodels.tsa.api import VAR
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tools.eval_measures import rmse, aic
-# Class for Bootstrap Sampling
-# This class contains the different ways to generate time series samplings using bootstrap
 
 class DependentBootstrapSampling:
 
