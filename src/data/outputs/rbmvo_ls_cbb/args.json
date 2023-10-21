@@ -1,1 +1,1 @@
-{"model_name": "rbmvo_ls_cbb", "num_timesteps_in": 756, "num_timesteps_out": 1, "long_only": "False", "mean_cov_estimator": "cbb"}
+{"model_name": "rbmvo_ls_cbb", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "False", "mean_cov_estimator": "cbb"}
