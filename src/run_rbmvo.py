@@ -2,7 +2,6 @@ import os
 import pandas as pd
 import torch
 import argparse
-import json
 from tqdm import tqdm
 
 from models.RBMVO import RBMVO
@@ -14,7 +13,7 @@ from utils.conn_data import save_result_in_blocks
 parser = argparse.ArgumentParser()
 
 parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="rbmvo")
-parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 3)
+parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 1)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
 parser.add_argument('-lo', '--long_only', type=str, help='consider long only constraint on the optimization', default="False")
 parser.add_argument('-meancove', '--mean_cov_estimator', type=str, help='name of the estimator to be used for the expected returns', default="cbb")
