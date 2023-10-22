@@ -87,7 +87,7 @@ class MVO(Estimators):
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
             ]
-            bounds = [(0, None) for _ in range(K)]
+            bounds = [(0, 1) for _ in range(K)]
 
             w0 = np.random.uniform(0, 1, size=K)
         else:
