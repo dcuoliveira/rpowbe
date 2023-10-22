@@ -50,7 +50,7 @@ class RPO(Estimators):
         
         # Problem       
         # max w^{\top}\bar{u} - (\kappa)*\sqrt(w^{\top} \Omega w) - \frac{\lambda}{2}w^{\top} \Sigma w
-        return (np.dot(self.mean_t, weights) - self.uncertainty_aversion*np.sqrt(np.dot(weights,np.dot(self.omega_t,weights))) - (self.risk_aversion/2)*np.dot(weights,np.dot(self.cov_t,weights))) * c
+        return (np.dot(weights, self.mean_t) - self.uncertainty_aversion*np.sqrt(np.dot(weights,np.dot(self.omega_t,weights))) - (self.risk_aversion/2)*np.sqrt(np.dot(weights,np.dot(self.cov_t,weights))) ) * c
 
     def forward(self,
                 returns: torch.Tensor,

@@ -59,7 +59,7 @@ class RBMVO(Estimators, Functionals):
         
         c = -1 if maximize else 1
         
-        return (np.dot(self.mean_t, weights) - ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights)))) * c
+        return (np.dot(weights, self.mean_t) - ((self.risk_aversion) * np.sqrt(np.dot(weights, np.dot(self.cov_t, weights))) )) * c
 
     def forward(self,
                 returns: torch.Tensor,

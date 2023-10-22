@@ -38,7 +38,7 @@ class MVO(Estimators):
         
         c = -1 if maximize else 1
         
-        return (np.dot(self.mean_t, weights) - ((self.risk_aversion) * np.dot(weights, np.dot(self.cov_t, weights)))) * c
+        return (np.dot(weights, self.mean_t) - ((self.risk_aversion/2) * np.sqrt(np.dot(weights, np.dot(self.cov_t, weights))) )) * c
 
     def forward(self,
                 returns: torch.Tensor,
@@ -100,7 +100,7 @@ class MVO(Estimators):
             w0 = np.random.uniform(-1, 1, size=K)
 
         # perform the optimization
-        opt_output = opt.minimize(self.objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')
+        opt_output = opt.minimize(self.objective, w0, constraints=constraints, bounds=bounds)
         wt = torch.tensor(np.array(opt_output.x)).T.repeat(num_timesteps_out, 1)
 
         return wt
