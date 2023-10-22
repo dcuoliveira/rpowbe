@@ -11,10 +11,11 @@ class ETFsLoader(object):
     
     """
     
-    def __init__(self):
+    def __init__(self, tickers: list=None):
         super().__init__()
 
         self.inputs_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "inputs")
+        self.tickers = tickers
         self._read_data()
 
     def _read_data(self):
@@ -22,6 +23,9 @@ class ETFsLoader(object):
         etfs_df = pd.read_csv(os.path.join(self.inputs_path, "etfs.csv"))
         etfs_df["date"] = pd.to_datetime(etfs_df["date"])
         etfs_df.set_index("date", inplace=True)
+
+        if self.tickers is not None:
+            etfs_df = etfs_df[self.tickers]
 
         # dataset processing 1
         ## sort index
