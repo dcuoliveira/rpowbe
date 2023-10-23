@@ -27,7 +27,7 @@ class Functionals:
         """
 
         # for each cov matrix, get the maximum eigenvalue
-        max_eigenvalues = torch.tensor([eig(x[i])[0].max() for i in range(len(x))])
+        max_eigenvalues = torch.tensor([eig(x[i])[0].real.max() for i in range(len(x))])
 
         return max_eigenvalues
 
