@@ -10,7 +10,7 @@ class nRBMVO(Estimators, Functionals):
                  risk_aversion: float=1,
                  mean_cov_estimator: str="mle",
                  num_boot: int = 200,
-                 alpha: float = 0.05,
+                 alpha: float = 0.95,
                  mean_functional: str=None,
                  cov_functional: str=None) -> None:
         """"
@@ -83,15 +83,16 @@ class nRBMVO(Estimators, Functionals):
             for idx in range(len(self.list_mean_covs)):
                 mean_t,cov_t = self.list_mean_covs[idx]
                 utility = utility_fn(weights,mean_t,cov_t)
-                utilities.append(utility)
+                utilities.append(c*utility)
             # sort utilities
             utilities.sort()
+            #print(utilities)
             #print(len(utilities))
             # return the utility of the alpha IC
             if len(utilities) == 1:
-                return utilities[0]
+                return c*utilities[0]
             else:
-                return utilities[int((self.alpha)*len(utilities))]
+                return c*utilities[int((self.alpha)*(len(utilities) - 1))]
             
         #
         if long_only:
@@ -110,8 +111,10 @@ class nRBMVO(Estimators, Functionals):
 
             w0 = np.random.uniform(-1, 1, size=self.K)
 
+        constraints = None
+        bounds = None
         # perform the optimization
-        opt_output = opt.minimize(true_objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')
+        opt_output = opt.minimize(true_objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')#'trust-constr')#'SLSQP')
         wt = torch.tensor(np.array(opt_output.x)).T.repeat(num_timesteps_out, 1)
 
         return wt
