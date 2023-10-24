@@ -111,8 +111,6 @@ class nRBMVO(Estimators, Functionals):
 
             w0 = np.random.uniform(-1, 1, size=self.K)
 
-        constraints = None
-        bounds = None
         # perform the optimization
         opt_output = opt.minimize(true_objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')#'trust-constr')#'SLSQP')
         wt = torch.tensor(np.array(opt_output.x)).T.repeat(num_timesteps_out, 1)
