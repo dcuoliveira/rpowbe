@@ -77,7 +77,7 @@ class nRBMVO(Estimators, Functionals):
             def utility_fn(w:torch.Tensor,
                            mean_t:torch.Tensor,
                            cov_t:torch.Tensor) -> torch.Tensor:
-                return (np.dot(mean_t, w) - ((self.risk_aversion/2) * np.dot(w, np.dot(cov_t, w)))) * c
+                return (np.dot(w, mean_t) - ((self.risk_aversion/2) * np.sqrt(np.dot(w, np.dot(cov_t, w))) )) * c
             # compute the utility for all
             utilities = list()
             for idx in range(len(self.list_mean_covs)):
