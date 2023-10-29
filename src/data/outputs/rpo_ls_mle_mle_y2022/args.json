@@ -1,1 +1,0 @@
-{"model_name": "rpo", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "False", "mean_estimator": "mle", "covariance_estimator": "mle", "uncertainty_aversion_estimator": "yin-etal-2022"}

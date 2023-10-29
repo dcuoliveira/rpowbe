@@ -1,1 +1,0 @@
-{"model_name": "rbmvo_ls_nobb_5.0", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "False", "mean_cov_estimator": "nobb", "alpha": 0.05}
