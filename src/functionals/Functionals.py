@@ -1,6 +1,7 @@
 import torch
 from numpy.linalg import eig
 import numpy as np
+import pandas as pd
 
 class Functionals:
     def __init__(self, alpha: float=0.95) -> None:
@@ -80,10 +81,10 @@ class Functionals:
 
         # n is typically the numbre of bootstrap samples
         n = len(x)
+        percentile_idx = int((1 - alpha) * n)
 
-        scores_idx = sorted(range(len(scores)), key=lambda k: scores[k])
-        selected_idx = scores_idx[int(alpha * n)]
-        x_selected = x[selected_idx]
+        scores_estimates = pd.DataFrame({"score": scores, "estimates": x}).sort_values(by="score", ascending=True).reset_index(drop=True)
+        x_selected = scores_estimates.iloc[percentile_idx]['estimates']
 
         return x_selected
 
