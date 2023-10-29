@@ -17,7 +17,7 @@ parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lo
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
 parser.add_argument('-lo', '--long_only', type=str, help='consider long only constraint on the optimization', default="True")
 parser.add_argument('-meancove', '--mean_cov_estimator', type=str, help='name of the estimator to be used for the expected returns', default="cbb")
-parser.add_argument('-a', '--alpha', type=float, help='Confidence level for the rank of the estimates.', default=0.05)
+parser.add_argument('-a', '--alpha', type=float, help='Confidence level for the rank of the estimates.', default=0.95)
 
 if __name__ == "__main__":
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     model_name = "{model_name}_{mean_cov_estimator}".format(model_name=model_name, mean_cov_estimator=mean_cov_estimator)
     
     # add mean estimator tag to name
-    model_name = "{model_name}_{alpha}".format(model_name=model_name, alpha=str(alpha*100))
+    model_name = "{model_name}_{alpha}".format(model_name=model_name, alpha=str(int(alpha*100)))
 
     args.model_name = model_name
 
