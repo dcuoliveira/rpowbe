@@ -1,4 +1,8 @@
 import torch
+import numpy as np
+from scipy.spatial.distance import mahalanobis
+from scipy.optimize import minimize
+
 from estimators.DependentBootstrapSampling import DependentBootstrapSampling
 
 class Estimators:
@@ -180,3 +184,44 @@ class Estimators:
             
         # return the list of mean and covariance matrices
         return list_mean_covs
+    
+    def SEstimator(self, returns: torch.Tensor,
+                   boot_method: str = "nobb",
+                   Bsize: int = 50,
+                   max_p: int = 50):
+        """
+        This function implements the S-estimate of the mean and covariance of the returns.
+
+        """
+
+        def objective(cov_t: torch.Tensor):
+            return np.linalg.det(cov_t)
+        
+        def mahalanobis_constraint(mu_t: torch.Tensor, cov_t: torch.Tensor, t: float=2.0):
+            return torch.mean(torch.tensor([mahalanobis(x, mu_t, cov_t) for x in self.boot_returns])) - t
+                
+        # get bootstrap samples
+        sampler = DependentBootstrapSampling(time_series=returns,
+                                             boot_method=boot_method,
+                                             Bsize=Bsize,
+                                             max_p=max_p)
+        self.boot_returns = sampler.sample()
+        n, d = self.boot_returns.shape
+        
+        constraints = ({'type': 'ineq', 'fun': mahalanobis_constraint})
+
+        # bounds for shape parameters (non-negative)
+        shape_bounds = [(0, None) for _ in range(d)]
+
+        # set up bounds for optimization
+        bounds = [(None, None)] * d + shape_bounds
+
+        # initial guess for parameters (mean and cov matrix)
+        initial_params = [torch.mean(self.boot_returns, axis=0), torch.eye(d)]
+        
+        # solve the optimization problem
+        opt_output = minimize(objective, initial_params, method='COBYLA', constraints=constraints, bounds=bounds)   
+
+        mean_t, cov_t = opt_output.x     
+
+        return mean_t, cov_t
