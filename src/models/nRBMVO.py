@@ -72,22 +72,25 @@ class nRBMVO(Estimators, Functionals):
         # compute the means and eigenvalues, and select the alpha-percentile of them
         def true_objective(weights: torch.Tensor,
                            maximize: bool=True) -> torch.Tensor:
+            
             c = -1 if maximize else 1
+            
             # define the utility function internally
             def utility_fn(w:torch.Tensor,
                            mean_t:torch.Tensor,
                            cov_t:torch.Tensor) -> torch.Tensor:
                 return (np.dot(w, mean_t) - ((self.risk_aversion/2) * np.sqrt(np.dot(w, np.dot(cov_t, w))) )) * c
+            
             # compute the utility for all
             utilities = list()
             for idx in range(len(self.list_mean_covs)):
                 mean_t,cov_t = self.list_mean_covs[idx]
                 utility = utility_fn(weights,mean_t,cov_t)
                 utilities.append(c*utility)
+            
             # sort utilities
             utilities.sort()
-            #print(utilities)
-            #print(len(utilities))
+
             # return the utility of the alpha IC
             if len(utilities) == 1:
                 return c*utilities[0]
