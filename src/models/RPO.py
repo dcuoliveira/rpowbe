@@ -60,8 +60,10 @@ class RPO(Estimators):
         K = returns.shape[1]
         T = returns.shape[0]
 
-        # mean estimator
-        if self.mean_estimator == "mle":
+        # if s-estimator, things will be a little different
+        if (self.mean_estimator == "sest") and (self.covariance_estimator == "sest"):
+            self.mean_t, self.cov_t = self.SEstimator(returns=returns)
+        elif (self.mean_estimator == "mle"):
             self.mean_t = self.MLEMean(returns)
         elif (self.mean_estimator == "cbb") or (self.mean_estimator == "nobb") or (self.mean_estimator == "sb"):
             self.mean_t = self.DependentBootstrapMean(returns=returns,
@@ -77,7 +79,6 @@ class RPO(Estimators):
                                                  max_q=50)
         else:
             raise NotImplementedError
-        self.estimated_means.append(self.mean_t[None, :])
 
         # covariance estimator
         if self.covariance_estimator == "mle":
@@ -94,8 +95,11 @@ class RPO(Estimators):
                                                   rep = 1000,
                                                   max_p= 50,
                                                   max_q= 50)
+        elif self.covariance_estimator == "sest":
+            pass
         else:
             raise NotImplementedError
+        self.estimated_means.append(self.mean_t[None, :])
         self.estimated_covs.append(self.cov_t)
         
         # uncertainty set estimator
