@@ -1,0 +1,1 @@
+{"model_name": "nrbmvo_lo_sb_75", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "True", "mean_cov_estimator": "sb", "alpha": 0.75}
