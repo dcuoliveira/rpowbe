@@ -95,9 +95,9 @@ class DependentBootstrapSampling:
             return torch.Tensor(sampled_data)
 
         elif self.boot_method == "sb":
-            sampled_data = torch.vstack(self.Blocks)
+            sampled_data = random.choices(self.Blocks)[0]
             
-            return torch.Tensor(sampled_data)
+            return sampled_data
     
     def create_blocks(self) -> None:
         """
@@ -127,25 +127,29 @@ class DependentBootstrapSampling:
         N = self.time_series.shape[0]
 
         Block_sets = list()
-        Ls = list()
-        Is = list()
+        for i in range(0, N, self.Bsize):
+            Block_sets_tmp = list()
+            Ls = list()
+            Is = list()
 
-        total = 0
-        i = 0
-        while total < N:
+            total = 0
+            i = 0
+            while total < N:
 
-            # write me a line of code to generate a random integer number between 1 and N
-            I = random.randint(1, N)
-            L = np.random.geometric(p=0.5, size=1)[0]
+                # write me a line of code to generate a random integer number between 1 and N
+                I = random.randint(1, N)
+                L = np.random.geometric(p=0.5, size=1)[0]
 
-            Block = self.time_series[I:(I + L), :]
-            Block_sets.append(Block)
+                Block = self.time_series[I:(I + L), :]
+                Block_sets_tmp.append(Block)
 
-            Ls.append(L)
-            Is.append(I)
+                Ls.append(L)
+                Is.append(I)
 
-            total += L
-            i += 1
+                total += L
+                i += 1
+            
+            Block_sets.append(torch.vstack(Block_sets_tmp))
 
         return Block_sets
     
