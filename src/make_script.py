@@ -14,7 +14,7 @@ long_only_options = ["True", "False"]
 
 estimation_methods = ["mle", "cbb", "nobb", "sb"]
 
-alphas = [0.95, 0.75]
+alphas = [0.95, 0.75, 0.05]
 
 with open(f"run_experiment_{model_name}.sh", "w") as file:
         for em in estimation_methods:
