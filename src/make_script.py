@@ -21,7 +21,7 @@ with open(f"run_experiment_{model_name}.sh", "w") as file:
             for lo in long_only_options:
                 # seed = np.random.choice(seeds)
 
-                if (model_name == "rbmvog") or (model_name == "rbmvo") or (model_name == "nrbmvo"):
+                if (model_name == "rbmvog") or (model_name == "rbmvo"):
                     for alpha in alphas:
                         command = f"python run_{model_name}.py --model_name {model_name} --long_only {lo} --mean_cov_estimator {em} --alpha {alpha}\n"
 
