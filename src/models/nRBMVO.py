@@ -95,7 +95,7 @@ class nRBMVO(Estimators, Functionals):
             if len(utilities) == 1:
                 return c*utilities[0]
             else:
-                return c*utilities[int((self.alpha)*(len(utilities) - 1))]
+                return c*utilities[int((1-self.alpha)*(len(utilities) - 1))]
             
         #
         if long_only:
