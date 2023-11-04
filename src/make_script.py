@@ -23,9 +23,9 @@ with open(f"run_experiment_{model_name}.sh", "w") as file:
 
                 if (model_name == "rbmvog") or (model_name == "rbmvo"):
                     for alpha in alphas:
-                        command = f"python run_{model_name}.py --model_name {model_name} --long_only {lo} --mean_cov_estimator {em} --alpha {alpha}\n"
+                        command = f"python run_{model_name}.py --model_name {model_name} --long_only {lo} --mean_cov_estimator {em} --alpha {alpha} &\n"
 
                         file.write(command)
                 else:
-                    command = f"python run_{model_name}.py --model_name {model_name} --long_only {lo} --mean_estimator {em} --cov_estimator {em}\n"
+                    command = f"python run_{model_name}.py --model_name {model_name} --long_only {lo} --mean_estimator {em} --cov_estimator {em} &\n"
                     file.write(command)
