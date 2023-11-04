@@ -1,9 +1,6 @@
 import os
 import torch
 import pandas as pd
-import glob
-from tqdm import tqdm
-import argparse
 
 class ETFsLoader(object):
     """
@@ -59,17 +56,3 @@ class ETFsLoader(object):
         self.A = A
         self.features = features
         self.returns = returns
-
-parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--debug', type=str, help='To run in debug mode.', default="False")
-
-args = parser.parse_args()
-
-if args.debug == "False":
-    DEBUG = False
-else:
-    DEBUG = True
-
-if __name__ == "__main__":
-    if DEBUG:
-        loader = ETFs()
