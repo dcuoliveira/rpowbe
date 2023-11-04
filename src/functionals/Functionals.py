@@ -42,6 +42,9 @@ class Functionals:
             torch.tensor: means of x.
         """
 
+        if len(x) == 1:
+            return x[0]
+        
         means_vec = torch.mean(torch.stack(x), axis=1)
 
         return means_vec
@@ -78,6 +81,9 @@ class Functionals:
         Returns:
             float: alpha-percentile of x.
         """
+
+        if len(x) == 1:
+            return x[0]
 
         # n is typically the numbre of bootstrap samples
         n = len(x)
