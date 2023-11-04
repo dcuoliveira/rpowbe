@@ -35,7 +35,7 @@ if __name__ == "__main__":
     mean_functional = "means"
     cov_functional = "eigenvalues"
 
-    print("Running script with the following parameters: model_name: {}, long_only: {}, mean_cov_estimator: {}".format(model_name, long_only, mean_cov_estimator))
+    print("Running script with the following parameters: model_name: {}, long_only: {}, mean_cov_estimator: {}, alpha: {}".format(model_name, long_only, mean_cov_estimator, alpha))
 
     # add tag for long only or long-short portfolios
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
