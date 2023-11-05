@@ -24,6 +24,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    args.model = copy(args.model_name)
+
     model_name = args.model_name
     train_ratio = 0.6
     num_timesteps_in = args.num_timesteps_in
