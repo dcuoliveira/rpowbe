@@ -1,4 +1,5 @@
 import torch
+import math
 import numpy as np
 from scipy.spatial.distance import mahalanobis
 from scipy.optimize import minimize
@@ -225,3 +226,106 @@ class Estimators:
         mean_t, cov_t = opt_output.x     
 
         return mean_t, cov_t
+
+
+
+# FROM HERE S-ESTIMATOR
+
+def SEstimator_phi(self,d):
+    if math.abs(d) >= 1:
+        return 0
+    else:
+        return (d - 2*d**3 + d**5)
+    
+
+def SEstimator_vau(self,d):
+    return d*self.SEstimator_phi(d)
+
+def SEstimator_w(self,d):
+    self.SEstimator_phi(d)/d
+    
+# compute the Sestimator mean
+def SEstimator_mean(self,
+                       returns: torch.Tensor,
+                       sample_mean: torch.Tensor,
+                       sample_covariance: torch.Tensor) -> torch.Tensor:
+    N = returns.shape[0]
+    isample_covariance = torch.linalg.inv(sample_covariance)
+    Smean = torch.zeros_like(sample_mean)
+    tot_w = torch.zeros(1)
+    for i in range(N):
+        x_i = returns[i,:]
+        dist = torch.matmul(x_i,torch.matmul(isample_covariance,x_i)) 
+        w = dist.apply_(self.SEstimator_w)
+        Smean = Smean + w*x_i
+        tot_w = tot_w + w
+    #
+    return (Smean/tot_w)
+
+# compute the SEstimator covariance
+
+def SEstimator_Covariance(self,
+                       returns: torch.Tensor,
+                       sample_mean: torch.Tensor,
+                       sample_covariance: torch.Tensor) -> torch.Tensor:
+    N = returns.shape[0]
+    P = returns.shape[1]
+    # S-estimator mean
+    SEst_mean = self.SEstimator_mean(returns,sample_mean,sample_covariance)
+    centered_returns = (returns - SEst_mean)
+    isample_covariance = torch.linalg.inv(sample_covariance)
+    Sest_cov = torch.zeros_like(sample_covariance)
+    tot_vau = torch.zeros(1)
+    for i in range(N):
+        x_i = centered_returns[i,:]
+        dist = torch.matmul(returns[i,:],torch.matmul(isample_covariance,returns[i,:])) 
+        M = torch.matmul(x_i,x_i.T) 
+        w = dist.apply_(self.SEstimator_vau)
+        vau = dist.apply_(self.SEs)
+        Sest_cov = Sest_cov + w*M
+        tot_vau = tot_vau + vau
+    #
+    return (P*Sest_cov/tot_vau)
+
+
+#
+def SEstimator_Mean_Covariance(self,
+                               returns: torch.Tensor,
+                               boot_method: str = "cbb",
+                               Bsize: int = 50,
+                               rep: int = 1000,
+                               max_p: int = 50) -> torch.Tensor:
+        """
+        Method to compute the bootstrap  mean and covariance sestimator of the returns.
+
+        Args:
+            returns (torch.tensor): returns tensor.
+            boot_method (str): bootstrap method name to build the block set. For example, "cbb".
+            Bsize (int): block size to create the block set.
+            rep (int): number of bootstrap samplings to get.
+            max_p (int): maximum order of the AR(p) part of the ARIMA model. Only used when boot_method = "model-based".
+            max_q (int): maximum order of the MA(q) part of the ARIMA model. Only used when boot_method = "model-based".
+
+        Returns: a list of pairs containig:
+            mean (torch.tensor): dependent bootstrap estimates for the mean of the returns.
+            cov (torch.tensor): dependent bootstrap estimates for the covariance of the returns.
+        """
+        
+        sampler = DependentBootstrapSampling(time_series=returns,
+                                             boot_method=boot_method,
+                                             Bsize=Bsize,
+                                             max_p=max_p)
+        
+        # sample mean
+        sample_mean = self.MLEMean(boot_returns)
+        # sample
+        sample_covariance = self.MLECovariance(boot_returns)
+        #
+        list_mean_covs = list()
+        for _ in range(rep):
+            boot_returns = sampler.sample()
+            Sest_mean = self.SEstimator_mean(returns,sample_mean,sample_covariance) 
+            Sest_cov = self.SEstimator_Covariance(returns,sample_mean,sample_covariance)
+            list_mean_covs.append((Sest_mean, Sest_cov))
+        #
+        return list_mean_covs
