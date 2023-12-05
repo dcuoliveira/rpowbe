@@ -186,6 +186,42 @@ class Estimators:
         # return the list of mean and covariance matrices
         return list_mean_covs
     
+        # returns both mean and covariance
+    def DependentBootstrapMean_Covariance_Corr(self,
+                                     returns: torch.Tensor,
+                                     boot_method: str = "cbb",
+                                     Bsize: int = 50,
+                                     rep: int = 1000,
+                                     max_p: int = 50) -> torch.Tensor:
+        """
+        Method to compute the bootstrap mean and covariance of the returns.
+
+        Args:
+            returns (torch.tensor): returns tensor.
+            boot_method (str): bootstrap method name to build the block set. For example, "cbb".
+            Bsize (int): block size to create the block set.
+            rep (int): number of bootstrap samplings to get.
+            max_p (int): maximum order of the AR(p) part of the ARIMA model. Only used when boot_method = "model-based".
+            max_q (int): maximum order of the MA(q) part of the ARIMA model. Only used when boot_method = "model-based".
+
+        Returns: a list of pairs containig:
+            mean (torch.tensor): dependent bootstrap estimates for the mean of the returns.
+            cov (torch.tensor): dependent bootstrap estimates for the covariance of the returns.
+        """
+        
+        sampler = DependentBootstrapSampling(time_series=returns,
+                                             boot_method=boot_method,
+                                             Bsize=Bsize,
+                                             max_p=max_p)
+        
+        list_mean_covs_corr = list()
+        for _ in range(rep):
+            boot_returns = sampler.sample()
+            list_mean_covs_corr.append((self.MLEMean(boot_returns), self.MLECovariance(boot_returns), torch.corrcoef(boot_returns.t())))
+            
+        # return the list of mean and covariance matrices
+        return list_mean_covs_corr
+    
     def SEstimator(self, returns: torch.Tensor,
                    boot_method: str = "nobb",
                    Bsize: int = 50,
