@@ -7,6 +7,8 @@ import math
 from signet.utils import sqrtinvdiag, invdiag, cut, merge, objscore
 from signet.burer_monteiro_sparse import augmented_lagrangian
 import scipy.sparse as sparse
+#
+from sklearn.metrics import silhouette_samples, silhouette_score
 
 np.set_printoptions(2)
 
@@ -284,11 +286,14 @@ class AutomaticCluster:
 		else:
 			return [sl.KMeans(n_clusters=x).fit(np.atleast_2d(v[:, 1 - x:])).labels_ for x in kk]
 
-	def spectral_cluster_laplacian(self, normalisation='sym_sep', eigens=None, mi=None):
+	def spectral_cluster_laplacian(self,select_clust_n = "silhouette",normalisation='sym_sep', eigens=None, mi=None):
 
 		"""Clusters the graph using the eigenvectors of the graph signed Laplacian.
 
 		Args:
+			select_clust_n (string): How the best number of clusters will be selected
+				'silhouette': silhouette method
+				'spectral': spectral method
 			normalisation (string): How to normalise for cluster size:
 				'none' - do not normalise.
 				'sym' - symmetric normalisation.
@@ -347,26 +352,59 @@ class AutomaticCluster:
 		v = v / w  # weight eigenvalues by eigenvectors, since smaller eigenvectors are more likely to be informative
 		v = np.atleast_2d(v)
 		if not listk:
-			k = -1
-			rw = np.abs(np.flip(w,0))
-			tot = np.sum(rw)
-			accum = np.cumsum(rw,0)/tot
-			k = [idx + 1 for idx in range(accum.shape[0]) if accum[idx] >= self.threshold]
-			#print(k)
-			k = k[0]
-			v = np.atleast_2d(v)
-			x = sl.KMeans(n_clusters=k).fit(v)
-			return x.labels_
+			if select_clust_n == "spectral":
+				k = -1
+				rw = np.abs(w)#np.flip(w,0))
+				tot = np.sum(rw)
+				accum = np.cumsum(rw,0)/tot
+				k = [idx + 1 for idx in range(accum.shape[0]) if accum[idx] >= self.threshold]
+				#print(k)
+				k = k[0]
+				v = np.atleast_2d(v)
+				x = sl.KMeans(n_clusters=k).fit(v)
+				return x.labels_
+			else:
+				wcss = list()
+				silh = list()
+				idx_best = -1
+				best_sil = -1
+				for	i in range(1,w.shape[0]):
+					result = sl.KMeans(n_clusters = i + 1).fit(v)
+					wcss.append(result)
+					avg_sil = silhouette_score(v,result.labels_)
+					silh.append(avg_sil)
+					if avg_sil > best_sil:
+						best_sil =avg_sil
+						idx_best = i
+				#
+				#print(idx_best + 1)
+				return wcss[idx_best].labels_
 		else:
-			k = -1
-			rw = np.abs(np.flip(w,0))
-			#print(rw)
-			tot = np.sum(rw)
-			accum = np.cumsum(rw,0)/tot
-			k = [idx + 1 for idx in range(accum.shape[0]) if accum[idx] >= self.threshold]
-			#print(k)
-			k = k[0]
-			return [sl.KMeans(n_clusters=x).fit(np.atleast_2d(v[:, 0:k - 1])).labels_ for x in kk]
+			if select_clust_n == "spectral":
+				k = -1
+				rw = np.abs(w)
+				tot = np.sum(rw)
+				accum = np.cumsum(rw,0)/tot
+				#print(accum)
+				k = [idx + 1 for idx in range(accum.shape[0]) if accum[idx] >= self.threshold]
+				#print(k)
+				k = k[0]
+				return [sl.KMeans(n_clusters=x).fit(np.atleast_2d(v[:, 0:k - 1])).labels_ for x in kk]
+			else:
+				wcss = list()
+				silh = list()
+				for	i in range(1,w.shape[0]):
+					result = sl.KMeans(n_clusters = i + 1).fit(v[:, 0:i - 1])
+					wcss.append(result)
+					avg_sil = silhouette_score(v,result.labels_)
+					silh.append(avg_sil)
+					if avg_sil > best_sil:
+						best_sil =avg_sil
+						idx_best = i
+				#
+				#print(idx_best + 1)
+				return wcss[idx_best].labels_
+
 
 	def geproblem_adjacency(self, k=4, normalisation='multiplicative', eigens=None, mi=None, nudge=0.5):
 

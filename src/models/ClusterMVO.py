@@ -101,7 +101,7 @@ class ClusterMVO(Estimators):
         Ap = np.array(torch.where(corr > 0, corr, 0.))
         An = np.abs(np.array(torch.where(corr < 0, corr, 0.)))
         clus_met = AutomaticCluster((Ap, An),threshold)
-        labels = clus_met.spectral_cluster_laplacian(normalisation='sym') 
+        labels = clus_met.spectral_cluster_laplacian(select_clust_n = "silhouette",normalisation='sym_sep') 
         return labels
     
     # apply MVO optimization to a given timeseries
@@ -139,3 +139,4 @@ class ClusterMVO(Estimators):
         opt_output = opt.minimize(objective, w0, constraints=constraints, bounds=bounds)
         #
         return (opt_output)
+
