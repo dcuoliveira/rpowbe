@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import argparse
+from copy import copy
 
 from models.EW import EW
 from data.ETFsLoader import ETFsLoader
@@ -14,7 +15,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    model_name = args.model_name
+    model_name = copy(args.model_name)
 
     print("Running script with the following parameters: model_name: {}".format(model_name))
 
