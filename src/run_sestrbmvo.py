@@ -3,6 +3,7 @@ import pandas as pd
 import torch
 import argparse
 from tqdm import tqdm
+from copy import copy
 
 from models.SEstRBMVO import SestRBMVO
 from data.ETFsLoader import ETFsLoader
@@ -23,7 +24,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    args.model = (args.model_name)
+    args.model = copy(args.model_name)
 
     model_name = args.model_name
     train_ratio = 0.6

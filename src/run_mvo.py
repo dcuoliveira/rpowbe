@@ -4,6 +4,7 @@ import torch
 import argparse
 import json
 from tqdm import tqdm
+from copy import copy
 
 from models.MVO import MVO
 from data.ETFsLoader import ETFsLoader

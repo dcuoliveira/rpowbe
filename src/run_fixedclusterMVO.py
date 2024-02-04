@@ -5,7 +5,6 @@ import argparse
 from tqdm import tqdm
 from copy import copy
 
-
 from models.fixedClusterMVO import fixedClusterMVO
 from data.ETFsLoader import ETFsLoader
 from utils.dataset_utils import create_rolling_window_ts, check_bool
