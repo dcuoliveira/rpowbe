@@ -3,6 +3,7 @@ import pandas as pd
 import torch
 import argparse
 from tqdm import tqdm
+from copy import copy
 
 from models.RBMVO import RBMVO
 from data.ETFsLoader import ETFsLoader
