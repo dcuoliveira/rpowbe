@@ -5,7 +5,7 @@ channels:
   - pytorch
   - pip
 dependencies:
-  - python=3.10.0
+  - python=3.11.0
   - mkl < 2022
   - pandas
   - numpy
@@ -23,3 +23,4 @@ dependencies:
   - cvxopt
   - pmdarima
   - seaborn
+  - scikit-learn
