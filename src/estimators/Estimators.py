@@ -332,7 +332,7 @@ def SEstimator_Mean_Covariance(self,
                                rep: int = 1000,
                                max_p: int = 50) -> torch.Tensor:
         """
-        Method to compute the bootstrap  mean and covariance sestimator of the returns.
+        Method to compute the bootstrap mean and covariance sestimator of the returns.
 
         Args:
             returns (torch.tensor): returns tensor.

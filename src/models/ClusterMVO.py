@@ -3,7 +3,6 @@ import numpy as np
 import scipy.optimize as opt
 from utils.AutomaticCluster import AutomaticCluster
 
-
 from estimators.Estimators import Estimators
 
 class ClusterMVO(Estimators):
@@ -45,19 +44,19 @@ class ClusterMVO(Estimators):
 
         # mean and cov estimates
         if self.mean_cov_estimator == "mle":
-            self.list_mean_covs = [(self.MLEMean(returns),self.MLECovariance(returns)),torch.corrcoef(returns.t())]
+            self.list_mean_covs = [(self.MLEMean(returns), self.MLECovariance(returns)), torch.corrcoef(returns.t())]
         else:
             self.list_mean_covs = self.DependentBootstrapMean_Covariance_Corr(returns=returns,
-                                                                         boot_method=self.mean_cov_estimator,
-                                                                         Bsize=50,
-                                                                         rep=self.num_boot)
+                                                                              boot_method=self.mean_cov_estimator,
+                                                                              Bsize=50,
+                                                                              rep=self.num_boot)
         # for each bootstraped time series
         # 1.- Compute The clustering
         # 2.- For each label, compute the mvo
-        # 3.- COmpute the accumulative 
+        # 3.- Compute the accumulative 
         results_boot = list()
         for idx in range(len(self.list_mean_covs)):
-            mean,cov,corr = self.list_mean_covs[idx]
+            mean, cov, corr = self.list_mean_covs[idx]
             labels = self.clustering(corr)
             list_models = list()
             accum_fun = 0.0
@@ -67,24 +66,27 @@ class ClusterMVO(Estimators):
                 mean_clus = mean[indicator]
                 cov_clus = cov[indicator,:]
                 cov_clus = cov_clus[:,indicator]
-                model_clus = self.apply_MVO(mean_clus,cov_clus,long_only=long_only)
+                model_clus = self.apply_MVO(mean_clus, cov_clus, long_only=long_only)
                 list_models.append(model_clus)
                 accum_fun = accum_fun + model_clus.fun
             
             # multiply by -1 because we want it maximized
-            results_boot.append((-1*accum_fun,labels,list_models,ulabels))
+            results_boot.append((-1*accum_fun, labels, list_models, ulabels))
+
         # now sort and take the percentile
         sorted_results_boot = sorted(results_boot, key = lambda x : x[0],reverse=False)
+       
         # get worst model
         pos = int((len(self.list_mean_covs) - 1)*self.alpha)
         _,labels, models,ulabels = sorted_results_boot[pos]
+        
         # now build the predictions array
         pred = np.zeros(shape = (1,returns.shape[1]))
         ulabels = list(ulabels)
         for idx in range(len(ulabels)):
             indicator = (labels == ulabels[idx])
             pred[0,indicator] = models[idx].x
-        #
+        
         wt = torch.tensor(np.array(pred)).T.repeat(num_timesteps_out, 1).T
 
         return wt

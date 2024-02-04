@@ -5,7 +5,6 @@ import argparse
 from tqdm import tqdm
 from copy import copy
 
-
 from models.ClusterMVO import ClusterMVO
 from data.ETFsLoader import ETFsLoader
 from utils.dataset_utils import create_rolling_window_ts, check_bool
@@ -68,7 +67,7 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = ClusterMVO(risk_aversion=1,mean_cov_estimator=mean_cov_estimator,num_boot = 200, alpha=alpha)
+    model = ClusterMVO(risk_aversion=1, mean_cov_estimator=mean_cov_estimator, num_boot=200, alpha=alpha)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()

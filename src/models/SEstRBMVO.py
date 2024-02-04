@@ -75,16 +75,19 @@ class SestRBMVO(Estimators, Functionals):
             # compute the means and eigenvalues, and select the alpha-percentile of them
             self.mean_t = self.apply_functional(x=[self.list_mean_covs[0]], func=self.mean_functional)
             self.cov_t = self.apply_functional(x=[self.list_mean_covs[1]], func=self.cov_functional)
+
         elif self.mean_cov_estimator == "sest":
             self.list_mean_covs = self.SEstimator_Mean_Covariance(returns=returns,
-                                                                   boot_method=self.mean_cov_estimator,
-                                                                   Bsize=50,
-                                                                   rep=self.num_boot)
-             # compute the means and eigenvalues, and select the alpha-percentile of them
+                                                                  boot_method=self.mean_cov_estimator,
+                                                                  Bsize=50,
+                                                                  rep=self.num_boot)
+            
+            # compute the means and eigenvalues, and select the alpha-percentile of them
             self.mean_t = self.apply_functional(x=[val[0] for val in self.list_mean_covs], func=self.mean_functional)
             print(self.mean_t.shape)
             self.cov_t = self.apply_functional(x=[val[1] for val in self.list_mean_covs], func=self.cov_functional)
             print(self.cov_t.shape)
+
         else:
             self.list_mean_covs = self.DependentBootstrapMean_Covariance(returns=returns,
                                                                          boot_method=self.mean_cov_estimator,
@@ -94,9 +97,6 @@ class SestRBMVO(Estimators, Functionals):
             # compute the means and eigenvalues, and select the alpha-percentile of them
             self.mean_t = self.apply_functional(x=[val[0] for val in self.list_mean_covs], func=self.mean_functional)
             self.cov_t = self.apply_functional(x=[val[1] for val in self.list_mean_covs], func=self.cov_functional)
-
-        # self.mean.append(self.mean_t)
-        # self.cov.append(self.cov_t)
 
         if long_only:
             constraints = [
