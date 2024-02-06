@@ -15,7 +15,7 @@ class RPO(Estimators):
                  uncertainty_aversion_estimator: str="yin-etal-2022") -> None:
         """"
         This function impements the Robust Portofolio Optimization with quadratic uncertainty set.
-        Implementation done using: Yin, Perchet and Soupé (2021).
+        This model was originally proposed by Cerias and Stubbs (2016) and later studied by Yin, Perchet and Soupé (2021).
 
         Args:
             risk_aversion (float): risk aversion parameter. Defaults to 0.5. 
@@ -28,8 +28,7 @@ class RPO(Estimators):
             covariance_estimator (str): covariance estimator to be used. Defaults to "mle", which defines the maximum likelihood estimator.
 
         References:
-        Markowitz, H. (1952) Portfolio Selection. The Journal of Finance.
-        Ang, Andrew, (2014). Asset Management: A Systematic Approach to Factor Investing. Oxford University Press. 
+        Ceria and Stubbs (2006) Robust Portofolio Optimization. Management Science.
         C. Yin, R. Perchet & F. Soupé (2021) A practical guide to robust portfolio. Quantitative Finance.
         """
         super().__init__()
