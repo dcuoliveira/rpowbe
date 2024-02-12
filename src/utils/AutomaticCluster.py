@@ -6,7 +6,7 @@ import numpy as np
 import math
 from signet.utils import sqrtinvdiag, invdiag, cut, merge, objscore
 from signet.burer_monteiro_sparse import augmented_lagrangian
-#
+
 from sklearn.metrics import silhouette_samples, silhouette_score
 
 np.set_printoptions(2)
