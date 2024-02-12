@@ -24,3 +24,5 @@ dependencies:
   - pmdarima
   - seaborn
   - scikit-learn
+  - pip:
+    - git+https://github.com/alan-turing-institute/SigNet.git
