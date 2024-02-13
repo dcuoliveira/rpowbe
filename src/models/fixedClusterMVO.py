@@ -58,6 +58,8 @@ class fixedClusterMVO(Estimators):
         # 2.- For each label, compute the mvo
         # 3.- COmpute the accumulative 
         results_boot = list()
+
+        ## include range of values for the number of clusters
         for idx in range(len(self.list_mean_covs)):
             mean,cov,corr = self.list_mean_covs[idx]
             labels = self.clustering(corr)
@@ -78,7 +80,7 @@ class fixedClusterMVO(Estimators):
         # now sort and take the percentile
         sorted_results_boot = sorted(results_boot, key = lambda x : x[0],reverse=False)
         # get worst model
-        pos = int((len(self.list_mean_covs) - 1)*self.alpha)
+        pos = int((1 - self.alpha)*(len(self.list_mean_covs) - 1))
         _,labels, models,ulabels = sorted_results_boot[pos]
         # now build the predictions array
         pred = np.zeros(shape = (1,returns.shape[1]))
@@ -97,7 +99,7 @@ class fixedClusterMVO(Estimators):
     # automatically selects the number of clusters, like in Cucuringu's paper
     # returns the clusters it obtained
     def clustering(self,
-                   corr: torch.Tensor) -> np.array:
+                   corr: torch.Tensor,) -> np.array:
         # using: pip install git+https://github.com/alan-turing-institute/SigNet.git
         Ap = np.array(torch.where(corr > 0, corr, 0.))
         An = np.abs(np.array(torch.where(corr < 0, corr, 0.)))

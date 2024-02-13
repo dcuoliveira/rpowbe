@@ -388,7 +388,7 @@ class AutomaticCluster:
 				k = [idx + 1 for idx in range(accum.shape[0]) if accum[idx] >= self.threshold]
 				#print(k)
 				k = k[0]
-				return [sl.KMeans(n_clusters=x).fit(np.atleast_2d(v[:, 0:k - 1])).labels_ for x in kk]
+				return [sl.KMeans(n_clusters=x).fit(np.atleast_2d(v[:, 0:k - 1])).labels_ for x in k]
 			else:
 				wcss = list()
 				silh = list()
@@ -659,7 +659,7 @@ class AutomaticCluster:
 
 		k = min(self.size, k)
 		if matrix == 'adjacency':
-			(w, v) = ss.linalg.eigsh(A_, k, which='LA')
+			(w, v) = ss.linalg.eigsh(self.A, k, which='LA')
 			w = w[::-1]
 		elif matrix == 'laplacian':
 			(w, v) = ss.linalg.eigsh(self.symLbar, k, which='SA')
