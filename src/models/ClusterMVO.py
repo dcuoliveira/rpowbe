@@ -11,7 +11,7 @@ class ClusterMVO(Estimators):
                  mean_cov_estimator: str="mle",
                  num_boot: int = 200,
                  alpha: float = 0.95,
-                 clus_method: str = "Lrw",
+                 cluster_method: str = "silhouette",
                  ) -> None:
         """"
         This function impements the mean-variance optimization (MVO) method proposed by Markowitz (1952).
@@ -20,7 +20,7 @@ class ClusterMVO(Estimators):
             risk_aversion (float): risk aversion parameter. Defaults to 0.5. 
                                    The risk aversion parameter is a scalar that controls the trade-off between risk and return.
                                    According to Ang (2014), the risk aversion parameter of a risk neutral individual ranges from 1 and 10.
-            clus_method (str): "Lrw": Laplacian, "Lsym": normalized Laplacian, "SPONGE", "SPONGEsym"
+            cluster_method (str): "Lrw": Laplacian, "Lsym": normalized Laplacian, "SPONGE", "SPONGEsym"
             mean_estimator (str): mean estimator to be used. Defaults to "mle", which defines the maximum likelihood estimator.
             covariance_estimator (str): covariance estimator to be used. Defaults to "mle", which defines the maximum likelihood estimator.
 
@@ -33,7 +33,7 @@ class ClusterMVO(Estimators):
         self.risk_aversion = risk_aversion
         self.mean_cov_estimator = mean_cov_estimator
         self.estimated_covs = list()
-        self.clus_method = clus_method
+        self.cluster_method = cluster_method
         self.num_boot = num_boot
         self.alpha = alpha
 
@@ -57,7 +57,7 @@ class ClusterMVO(Estimators):
         results_boot = list()
         for idx in range(len(self.list_mean_covs)):
             mean, cov, corr = self.list_mean_covs[idx]
-            labels = self.clustering(corr)
+            labels = self.clustering(corr, cluster_method=self.cluster_method)
             list_models = list()
             accum_fun = 0.0
             ulabels = set(labels)
@@ -98,12 +98,13 @@ class ClusterMVO(Estimators):
     # returns the clusters it obtained
     def clustering(self,
                    corr: torch.Tensor,
+                   cluster_method: str = "silhouette",
                    threshold: float = 0.95) -> np.array:
         # using: pip install git+https://github.com/alan-turing-institute/SigNet.git
         Ap = np.array(torch.where(corr > 0, corr, 0.))
         An = np.abs(np.array(torch.where(corr < 0, corr, 0.)))
         clus_met = AutomaticCluster((Ap, An),threshold)
-        labels = clus_met.spectral_cluster_laplacian(select_clust_n = "silhouette",normalisation='sym_sep') 
+        labels = clus_met.spectral_cluster_laplacian(select_clust_n = cluster_method, normalisation='sym_sep') 
         return labels
     
     # apply MVO optimization to a given timeseries
