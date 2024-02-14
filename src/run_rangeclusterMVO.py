@@ -13,7 +13,7 @@ from utils.conn_data import save_result_in_blocks
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="crbmvo")
+parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="grbcmvo")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 1)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
 parser.add_argument('-lo', '--long_only', type=str, help='consider long only constraint on the optimization', default="True")
