@@ -47,7 +47,7 @@ class fixedClusterMVO(Estimators):
 
         # mean and cov estimates
         if self.mean_cov_estimator == "mle":
-            self.list_mean_covs = [(self.MLEMean(returns),self.MLECovariance(returns)),torch.corrcoef(returns.t())]
+            raise ValueError("MLE is not supported for this model")
         else:
             self.list_mean_covs = self.DependentBootstrapMean_Covariance_Corr(returns=returns,
                                                                          boot_method=self.mean_cov_estimator,
