@@ -1,0 +1,1 @@
+{"model_name": "rbcmvo_silhouette_ls_sb_95", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "False", "mean_cov_estimator": "sb", "cluster_method": "silhouette", "alpha": 0.95, "model": "rbcmvo"}

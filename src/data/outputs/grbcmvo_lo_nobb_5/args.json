@@ -1,0 +1,1 @@
+{"model_name": "grbcmvo_lo_nobb_5", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "True", "mean_cov_estimator": "nobb", "alpha": 0.05, "min_clus": 2, "max_clus": 5, "model": "grbcmvo"}
