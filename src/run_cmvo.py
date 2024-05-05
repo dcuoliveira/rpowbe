@@ -5,7 +5,7 @@ import argparse
 from tqdm import tqdm
 from copy import copy
 
-from models.CucuringuClusterMVO import CucuringuClusterMVO
+from models.CMVO import CMVO
 from data.ETFsLoader import ETFsLoader
 from utils.dataset_utils import create_rolling_window_ts, check_bool
 from loss_functions.SharpeLoss import SharpeLoss
@@ -75,7 +75,7 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = CucuringuClusterMVO(risk_aversion=1)
+    model = CMVO(risk_aversion=1)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()
