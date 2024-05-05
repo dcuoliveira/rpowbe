@@ -70,11 +70,7 @@ class RBMVO(Estimators, Functionals):
 
         # mean and cov estimates
         if self.mean_cov_estimator == "mle":
-            self.list_mean_covs = [self.MLEMean(returns), self.MLECovariance(returns)]
-            
-            # compute the means and eigenvalues, and select the alpha-percentile of them
-            self.mean_t = self.apply_functional(x=[self.list_mean_covs[0]], func=self.mean_functional)
-            self.cov_t = self.apply_functional(x=[self.list_mean_covs[1]], func=self.cov_functional)
+            raise NotImplementedError("MLE is not allowed as an estimator of the mean and covariance.")
         else:
             self.list_mean_covs = self.DependentBootstrapMean_Covariance(returns=returns,
                                                                          boot_method=self.mean_cov_estimator,
