@@ -95,7 +95,8 @@ class RBMVO(Estimators, Functionals):
             if len(utilities) == 1:
                 return c*utilities[0]
             else:
-                return c*utilities[int(int(self.alpha * len(utilities)) - 1)]
+                percentile_idx = int(self.alpha * len(utilities)) - 1
+                return c*utilities[percentile_idx]
             
         if long_only:
             constraints = [
