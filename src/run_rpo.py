@@ -18,7 +18,7 @@ parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lo
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
 parser.add_argument('-lo', '--long_only', type=str, help='use all years to build dataset', default="True")
 parser.add_argument('-meane', '--mean_estimator', type=str, help='name of the estimator to be used for the expected returns', default="mle")
-parser.add_argument('-cove', '--covariance_estimator', type=str, help='name of the estimator to be used for the covariance of the returns', default="mle")
+parser.add_argument('-cove', '--cov_estimator', type=str, help='name of the estimator to be used for the covariance of the returns', default="mle")
 parser.add_argument('-uae', '--uncertainty_aversion_estimator', type=str, help='name of the uncertainty aversion estimator to be used', default="ceria-stubbs-2006")
 
 if __name__ == "__main__":
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     drop_last = True
     long_only = check_bool(args.long_only)
     mean_estimator = args.mean_estimator
-    covariance_estimator = args.covariance_estimator
+    covariance_estimator = args.cov_estimator
     uncertainty_aversion_estimator = args.uncertainty_aversion_estimator
 
     print("Running script with the following parameters: model_name: {}, long_only: {}, mean_estimator: {}, covariance_estimator: {}".format(model_name, long_only, mean_estimator, covariance_estimator))
