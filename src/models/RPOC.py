@@ -1,20 +1,17 @@
 import torch
 import numpy as np
 import scipy.optimize as opt
-from utils.Clustering import Clustering
-
+from utils.AutomaticCluster import AutomaticCluster
 
 from estimators.Estimators import Estimators
 
-class rangeClusterMVO(Estimators):
+class RPOC(Estimators):
     def __init__(self,
                  risk_aversion: float=1,
                  mean_cov_estimator: str="mle",
                  num_boot: int = 200,
                  alpha: float = 0.95,
-                 clus_method: str = "Lrw",
-                 min_num_clusters: int = 2,
-                 max_num_clusters: int = 10,
+                 cluster_method: str = "silhouette",
                  ) -> None:
         """"
         This function impements the mean-variance optimization (MVO) method proposed by Markowitz (1952).
@@ -23,7 +20,7 @@ class rangeClusterMVO(Estimators):
             risk_aversion (float): risk aversion parameter. Defaults to 0.5. 
                                    The risk aversion parameter is a scalar that controls the trade-off between risk and return.
                                    According to Ang (2014), the risk aversion parameter of a risk neutral individual ranges from 1 and 10.
-            clus_method (str): "Lrw": Laplacian, "Lsym": normalized Laplacian, "SPONGE", "SPONGEsym"
+            cluster_method (str): "Lrw": Laplacian, "Lsym": normalized Laplacian, "SPONGE", "SPONGEsym"
             mean_estimator (str): mean estimator to be used. Defaults to "mle", which defines the maximum likelihood estimator.
             covariance_estimator (str): covariance estimator to be used. Defaults to "mle", which defines the maximum likelihood estimator.
 
@@ -36,12 +33,9 @@ class rangeClusterMVO(Estimators):
         self.risk_aversion = risk_aversion
         self.mean_cov_estimator = mean_cov_estimator
         self.estimated_covs = list()
-        self.clus_method = clus_method
+        self.cluster_method = cluster_method
         self.num_boot = num_boot
         self.alpha = alpha
-        self.min_num_clusters = min_num_clusters
-        self.max_num_clusters = max_num_clusters
-        self.best_num_clusters = None # will save the best number of clusters
 
     def forward(self,
                 returns: torch.Tensor,
@@ -50,55 +44,49 @@ class rangeClusterMVO(Estimators):
 
         # mean and cov estimates
         if self.mean_cov_estimator == "mle":
-            raise ValueError("MLE is not supported for this model")
+            raise NotImplementedError("MLE is not allowed as an estimator of the mean and covariance.")
         else:
             self.list_mean_covs = self.DependentBootstrapMean_Covariance_Corr(returns=returns,
-                                                                         boot_method=self.mean_cov_estimator,
-                                                                         Bsize=50,
-                                                                         rep=self.num_boot)
+                                                                              boot_method=self.mean_cov_estimator,
+                                                                              Bsize=50,
+                                                                              rep=self.num_boot)
         # for each bootstraped time series
         # 1.- Compute The clustering
         # 2.- For each label, compute the mvo
-        # 3.- COmpute the accumulative 
-        result_cluster = list() # saves all 
-        for k in range(self.min_num_clusters,self.max_num_clusters + 1):
-            results_boot = list()
-            for idx in range(len(self.list_mean_covs)):
-                mean,cov,corr = self.list_mean_covs[idx]
-                labels = self.clustering(corr,k)
-                list_models = list()
-                accum_fun = 0.0
-                ulabels = set(labels)
-                for lab in ulabels:
-                    indicator = (labels == lab)
-                    mean_clus = mean[indicator]
-                    cov_clus = cov[indicator,:]
-                    cov_clus = cov_clus[:,indicator]
-                    model_clus = self.apply_MVO(mean_clus,cov_clus,long_only=long_only)
-                    list_models.append(model_clus)
-                    accum_fun = accum_fun + model_clus.fun
-                
-                # multiply by -1 because we want it maximized
-                results_boot.append((-1*accum_fun,labels,list_models,ulabels))
-            # obtain the percentile for each cluster number
-            # now sort and take the percentile
-            sorted_results_boot = sorted(results_boot, key = lambda x : x[0],reverse=False)
-            # get alpha-percentile utility
-            pos = int((1 - self.alpha)*(len(self.list_mean_covs) - 1))
-            utility,labels, models,ulabels = sorted_results_boot[pos]
-            # append the utility/labels/models/ulabels of the best alpha percentile for a fixed number of clusters
-            result_cluster.append((utility,labels, models,ulabels))
-        # get the number of clusters with the maximum utility
-        _,labels,models,ulabels = max(result_cluster, key=lambda tup: tup[0])
-        # saving the best number of clusters
-        self.best_num_clusters = len(ulabels)
+        # 3.- Compute the accumulative 
+        results_boot = list()
+        for idx in range(len(self.list_mean_covs)):
+            mean, cov, corr = self.list_mean_covs[idx]
+            labels = self.clustering(corr, cluster_method=self.cluster_method)
+            list_models = list()
+            accum_fun = 0.0
+            ulabels = set(labels)
+            for lab in ulabels:
+                indicator = (labels == lab)
+                mean_clus = mean[indicator]
+                cov_clus = cov[indicator,:]
+                cov_clus = cov_clus[:,indicator]
+                model_clus = self.apply_MVO(mean_clus, cov_clus, long_only=long_only)
+                list_models.append(model_clus)
+                accum_fun = accum_fun + model_clus.fun
+            
+            # multiply by -1 because we want it maximized
+            results_boot.append((-1*accum_fun, labels, list_models, ulabels))
+
+        # now sort and take the percentile
+        sorted_results_boot = sorted(results_boot, key = lambda x : x[0],reverse=False)
+       
+        # get worst model
+        percentile_idx = int(self.alpha * len(self.list_mean_covs)) - 1
+        _,labels, models,ulabels = sorted_results_boot[percentile_idx]
+        
         # now build the predictions array
         pred = np.zeros(shape = (1,returns.shape[1]))
         ulabels = list(ulabels)
         for idx in range(len(ulabels)):
             indicator = (labels == ulabels[idx])
             pred[0,indicator] = models[idx].x
-        #
+        
         wt = torch.tensor(np.array(pred)).T.repeat(num_timesteps_out, 1).T
 
         return wt
@@ -110,12 +98,13 @@ class rangeClusterMVO(Estimators):
     # returns the clusters it obtained
     def clustering(self,
                    corr: torch.Tensor,
-                   k: int) -> np.array:
+                   cluster_method: str = "silhouette",
+                   threshold: float = 0.95) -> np.array:
         # using: pip install git+https://github.com/alan-turing-institute/SigNet.git
         Ap = np.array(torch.where(corr > 0, corr, 0.))
         An = np.abs(np.array(torch.where(corr < 0, corr, 0.)))
-        clus_met = Clustering((Ap, An))
-        labels = clus_met.spectral_cluster_laplacian(k, normalisation='sym_sep')
+        clus_met = AutomaticCluster((Ap, An),threshold)
+        labels = clus_met.spectral_cluster_laplacian(select_clust_n = cluster_method, normalisation='sym_sep') 
         return labels
     
     # apply MVO optimization to a given timeseries

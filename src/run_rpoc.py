@@ -5,7 +5,7 @@ import argparse
 from tqdm import tqdm
 from copy import copy
 
-from models.RBCMVO import RBCMVO
+from models.RPOC import RPOC
 from data.ETFsLoader import ETFsLoader
 from utils.dataset_utils import create_rolling_window_ts, check_bool
 from loss_functions.SharpeLoss import SharpeLoss
@@ -13,7 +13,7 @@ from utils.conn_data import save_result_in_blocks
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="rbcmvo")
+parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="rpoc")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 1)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
 parser.add_argument('-lo', '--long_only', type=str, help='consider long only constraint on the optimization', default="True")
@@ -73,7 +73,7 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = RBCMVO(risk_aversion=1, mean_cov_estimator=mean_cov_estimator, cluster_method=cluster_method, num_boot=200, alpha=alpha)
+    model = RPOC(risk_aversion=1, mean_cov_estimator=mean_cov_estimator, cluster_method=cluster_method, num_boot=200, alpha=alpha)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()
