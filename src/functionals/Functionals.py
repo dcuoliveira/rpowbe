@@ -87,10 +87,46 @@ class Functionals:
 
         # n is typically the numbre of bootstrap samples
         n = len(x)
-        percentile_idx = int((1 - alpha) * n)
+        percentile_idx = int(alpha * n) - 1
 
         scores_estimates = pd.DataFrame({"score": scores, "estimates": x}).sort_values(by="score", ascending=True).reset_index(drop=True)
         x_selected = scores_estimates.iloc[percentile_idx]['estimates']
+
+        return x_selected
+    
+    def maximum(self, x: torch.tensor, scores: torch.tensor) -> float:
+        """
+        This function computes the maximum of a given vector.
+
+        Args:
+            x (torch.tensor): input vector.
+        Returns:
+            float: maximum of x.
+        """
+
+        if len(x) == 1:
+            return x[0]
+
+        scores_estimates = pd.DataFrame({"score": scores, "estimates": x}).sort_values(by="score", ascending=True).reset_index(drop=True)
+        x_selected = scores_estimates.iloc[-1]['estimates']
+
+        return x_selected
+    
+    def minimum(self, x: torch.tensor, scores: torch.tensor) -> float:
+        """
+        This function computes the minimum of a given vector.
+
+        Args:
+            x (torch.tensor): input vector.
+        Returns:
+            float: minimum of x.
+        """
+
+        if len(x) == 1:
+            return x[0]
+
+        scores_estimates = pd.DataFrame({"score": scores, "estimates": x}).sort_values(by="score", ascending=True).reset_index(drop=True)
+        x_selected = scores_estimates.iloc[0]['estimates']
 
         return x_selected
 
@@ -106,14 +142,47 @@ class Functionals:
         """
 
         if func == "eigenvalues":
-            scores = self.eigenvalues(x)
+            self.scores = self.eigenvalues(x)
         elif func == "means":
-            scores = self.means(x)
+            self.scores = self.means(x)
         elif func == "utility":
-            scores = self.utility(x)
+            self.scores = self.utility(x)
         else:
             raise ValueError("Functional not implemented.")
 
-        x_selected = self.percentile(x, scores, alpha=self.alpha)
+        if self.alpha == -1:
+            x_selected = self.minimum(x, self.scores)
+        elif self.alpha == 1:
+            x_selected = self.maximum(x, self.scores)
+        else:
+            x_selected = self.percentile(x, self.scores, alpha=self.alpha)
         
         return x_selected
+    
+    
+    def find_utility_position(self, utilities, utility_value):
+        """
+        Find the position of the utility tensor corresponding to the given final utility valuer.
+
+        Parameters
+        ----------
+        utilities : list
+            List of utilities.
+        utility_value : float
+            Final utility value.
+        
+        Returns
+        -------
+        int
+            Position of the utility tensor corresponding to the given final utility valuer.
+
+        """
+        
+        for i, utility in enumerate(utilities):
+
+            check = (torch.sum(utility == utility_value) == len(utility))
+
+            if check:
+                return i
+            
+        return None
