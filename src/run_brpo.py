@@ -5,8 +5,7 @@ import argparse
 from tqdm import tqdm
 from copy import copy
 
-
-from models.nRBMVO import nRBMVO
+from models.BRPO import BRPO
 from data.ETFsLoader import ETFsLoader
 from utils.dataset_utils import create_rolling_window_ts, check_bool
 from loss_functions.SharpeLoss import SharpeLoss
@@ -14,16 +13,17 @@ from utils.conn_data import save_result_in_blocks
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="rbmvog")
+parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="brpo")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 1)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
 parser.add_argument('-lo', '--long_only', type=str, help='consider long only constraint on the optimization', default="True")
-parser.add_argument('-meancove', '--mean_cov_estimator', type=str, help='name of the estimator to be used for the expected returns', default="sb")
+parser.add_argument('-meancove', '--mean_cov_estimator', type=str, help='name of the estimator to be used for the expected returns', default="cbb", choices=["sb", "cbb", "nobb"])
 parser.add_argument('-a', '--alpha', type=float, help='Confidence level for the rank of the estimates.', default=0.95)
 
 if __name__ == "__main__":
 
     args = parser.parse_args()
+
     args.model = copy(args.model_name)
 
     model_name = args.model_name
@@ -44,11 +44,12 @@ if __name__ == "__main__":
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
 
     # add mean estimator tag to name
-    model_name = "{model_name}_{mean_cov_estimator}".format(model_name=model_name, mean_cov_estimator=mean_cov_estimator)
+    model_name = f"{model_name}_{mean_cov_estimator}_{mean_cov_estimator}"
     
     # add mean estimator tag to name
-    model_name = "{model_name}_{alpha}".format(model_name=model_name, alpha=str(int(alpha*100)))
-    
+    if mean_cov_estimator != "mle":
+        model_name = f"{model_name}_{str(int(alpha*100))}"
+
     args.model_name = model_name
 
     # relevant paths
@@ -69,7 +70,7 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = nRBMVO(mean_cov_estimator=mean_cov_estimator, alpha=alpha, mean_functional=mean_functional, cov_functional=cov_functional)
+    model = BRPO(mean_cov_estimator=mean_cov_estimator, alpha=alpha, mean_functional=mean_functional, cov_functional=cov_functional)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()

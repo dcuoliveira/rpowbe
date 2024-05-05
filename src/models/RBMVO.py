@@ -53,14 +53,6 @@ class RBMVO(Estimators, Functionals):
         if self.mean_functional == self.cov_functional:
             self.functional = self.mean_functional
 
-    def objective(self,
-                  weights: torch.Tensor,
-                  maximize: bool=True) -> torch.Tensor:
-        
-        c = -1 if maximize else 1
-        
-        return (np.dot(weights, self.mean_t) - ((self.risk_aversion/2) * np.sqrt(np.dot(weights, np.dot(self.cov_t, weights))) )) * c
-
     def forward(self,
                 returns: torch.Tensor,
                 num_timesteps_out: int,
@@ -77,18 +69,39 @@ class RBMVO(Estimators, Functionals):
                                                                          Bsize=50,
                                                                          rep=self.num_boot)
         
-            # compute the means and eigenvalues, and select the alpha-percentile of them
-            self.mean_t = self.apply_functional(x=[val[0] for val in self.list_mean_covs], func=self.mean_functional)
-            self.cov_t = self.apply_functional(x=[val[1] for val in self.list_mean_covs], func=self.cov_functional)
+        # compute the means and eigenvalues, and select the alpha-percentile of them
+        def true_objective(weights: torch.Tensor,
+                           maximize: bool=True) -> torch.Tensor:
+            
+            c = -1 if maximize else 1
+            
+            # define the utility function internally
+            def utility_fn(w:torch.Tensor,
+                           mean_t:torch.Tensor,
+                           cov_t:torch.Tensor) -> torch.Tensor:
+                return (np.dot(w, mean_t) - ((self.risk_aversion/2) * np.sqrt(np.dot(w, np.dot(cov_t, w))) )) * c
+            
+            # compute the utility for all
+            utilities = list()
+            for idx in range(len(self.list_mean_covs)):
+                mean_t,cov_t = self.list_mean_covs[idx]
+                utility = utility_fn(weights,mean_t,cov_t)
+                utilities.append(c*utility)
+            
+            # sort utilities
+            utilities.sort()
 
-        # self.mean.append(self.mean_t)
-        # self.cov.append(self.cov_t)
-
+            # return the utility of the alpha IC
+            if len(utilities) == 1:
+                return c*utilities[0]
+            else:
+                return c*utilities[int(int(self.alpha * len(utilities)) - 1)]
+            
         if long_only:
             constraints = [
                 {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
             ]
-            bounds = [(0, 1) for _ in range(self.K)]
+            bounds = [(0, None) for _ in range(self.K)]
 
             w0 = np.random.uniform(0, 1, size=self.K)
         else:
@@ -101,50 +114,7 @@ class RBMVO(Estimators, Functionals):
             w0 = np.random.uniform(-1, 1, size=self.K)
 
         # perform the optimization
-        opt_output = opt.minimize(self.objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')
+        opt_output = opt.minimize(true_objective, w0, constraints=constraints, bounds=bounds, method='SLSQP')#'trust-constr')#'SLSQP')
         wt = torch.tensor(np.array(opt_output.x)).T.repeat(num_timesteps_out, 1)
-
-        return wt
-
-    def forward_gradient(self,
-                         returns: torch.Tensor,
-                         num_timesteps_out: int,
-                         long_only: bool=True) -> torch.Tensor:
-        
-        self.K = returns.shape[1]
-
-        # mean and cov estimates
-        if self.mean_cov_estimator == "mle":
-            self.list_mean_covs = [self.MLEMean(returns)]
-        else:
-            self.list_mean_covs = self.DependentBootstrapMean_Covariance(returns=returns,
-                                                                         boot_method=self.mean_cov_estimator,
-                                                                         Bsize=50,
-                                                                         rep=self.num_boot)
-           
-
-        wt = torch.Tensor(np.random.uniform(-1, 1, size = self.K))
-        # Nick's optimization proposal
-        step = 0.01 # -> for gradient descent
-        eps = 1e-6
-        num_iter = 100
-        while num_iter != 0:
-            
-            # compute the utilities and select the alpha-percentile
-            mean_IC, cov_IC = self.apply_functional(x=self.list_mean_covs, func=self.functional)
-
-            # self.mean.append(self.mean_t)
-            # self.cov.append(self.cov_t)
-
-            # # compute the derivative
-            d_utility_theta = mean_IC - 2*self.risk_aversion*torch.matmul(cov_IC, wt)
-            new_wt = wt + step*d_utility_theta
-            if torch.sum(torch.abs(wt - new_wt)) < eps:
-                print("convergence attained")
-                break
-            wt = new_wt
-            num_iter = num_iter - 1
-
-        wt = wt.repeat(num_timesteps_out, 1)
 
         return wt

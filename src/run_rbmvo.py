@@ -5,6 +5,7 @@ import argparse
 from tqdm import tqdm
 from copy import copy
 
+
 from models.RBMVO import RBMVO
 from data.ETFsLoader import ETFsLoader
 from utils.dataset_utils import create_rolling_window_ts, check_bool
@@ -23,7 +24,6 @@ parser.add_argument('-a', '--alpha', type=float, help='Confidence level for the 
 if __name__ == "__main__":
 
     args = parser.parse_args()
-
     args.model = copy(args.model_name)
 
     model_name = args.model_name
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # add mean estimator tag to name
     if mean_cov_estimator != "mle":
         model_name = f"{model_name}_{str(int(alpha*100))}"
-
+    
     args.model_name = model_name
 
     # relevant paths
