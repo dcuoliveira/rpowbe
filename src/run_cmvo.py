@@ -18,9 +18,8 @@ parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lo
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
 parser.add_argument('-lo', '--long_only', type=str, help='consider long only constraint on the optimization', default="True")
 parser.add_argument('-cm', '--cluster_method', type=str, help='method to find optimal k for clustering', default="silhouette")
-parser.add_argument('-meancove', '--mean_cov_estimator', type=str, help='name of the estimator to be used for the expected returns', default="cbb")
+parser.add_argument('-meancove', '--mean_cov_estimator', type=str, help='name of the estimator to be used for the expected returns', default="mle", choices=["mle"])
 parser.add_argument('-a', '--alpha', type=float, help='Confidence level for the rank of the estimates.', default=0.95)
-
 
 # INSTALL SIGNET: pip install git+https://github.com/alan-turing-institute/SigNet.git
 
@@ -50,10 +49,7 @@ if __name__ == "__main__":
     model_name = f"{model_name}_lo" if long_only else f"{model_name}_ls"
 
     # add mean estimator tag to name
-    if args.mean_cov_estimator == "mle":
-        model_name = f"{model_name}_{mean_cov_estimator}_{mean_cov_estimator}"
-    else:
-        model_name = f"{model_name}_{mean_cov_estimator}"
+    model_name = f"{model_name}_{mean_cov_estimator}_{mean_cov_estimator}"
     
     # add mean estimator tag to name
     if args.mean_cov_estimator != "mle":
