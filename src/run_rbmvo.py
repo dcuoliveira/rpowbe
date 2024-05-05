@@ -44,10 +44,11 @@ if __name__ == "__main__":
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
 
     # add mean estimator tag to name
-    model_name = "{model_name}_{mean_cov_estimator}".format(model_name=model_name, mean_cov_estimator=mean_cov_estimator)
+    model_name = f"{model_name}_{mean_cov_estimator}_{mean_cov_estimator}"
     
     # add mean estimator tag to name
-    model_name = "{model_name}_{alpha}".format(model_name=model_name, alpha=str(int(alpha*100)))
+    if mean_cov_estimator != "mle":
+        model_name = f"{model_name}_{str(int(alpha*100))}"
 
     args.model_name = model_name
 
