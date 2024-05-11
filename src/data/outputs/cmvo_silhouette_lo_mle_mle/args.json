@@ -1,0 +1,1 @@
+{"model_name": "cmvo_silhouette_lo_mle_mle", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "True", "cluster_method": "silhouette", "mean_cov_estimator": "mle", "alpha": 0.95, "model": "cmvo"}

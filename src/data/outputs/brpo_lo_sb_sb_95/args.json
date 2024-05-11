@@ -1,0 +1,1 @@
+{"model_name": "brpo_lo_sb_sb_95", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "True", "mean_cov_estimator": "sb", "alpha": 0.95, "model": "brpo"}
