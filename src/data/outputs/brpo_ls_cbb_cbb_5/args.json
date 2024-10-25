@@ -1,1 +1,0 @@
-{"model_name": "brpo_ls_cbb_cbb_5", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "False", "mean_cov_estimator": "cbb", "alpha": 0.05, "model": "brpo"}

@@ -1,1 +1,0 @@
-{"model_name": "rbmvog_lo_cbb_5", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "True", "alpha": 0.05, "model": "rbmvog", "mean_estimator": "cbb", "covariance_estimator": "cbb"}

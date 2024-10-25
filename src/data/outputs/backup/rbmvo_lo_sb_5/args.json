@@ -1,1 +1,0 @@
-{"model_name": "rbmvo_lo_sb_5", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "True", "mean_cov_estimator": "sb", "alpha": 0.05, "model": "rbmvo", "mean_estimator": "sb", "covariance_estimator": "sb"}

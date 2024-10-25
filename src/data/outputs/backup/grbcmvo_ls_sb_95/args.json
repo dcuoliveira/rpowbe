@@ -1,1 +1,0 @@
-{"model_name": "grbcmvo_ls_sb_95", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "False", "mean_cov_estimator": "sb", "alpha": 0.95, "min_clus": 2, "max_clus": 5, "model": "grbcmvo"}

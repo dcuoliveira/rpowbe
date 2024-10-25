@@ -1,1 +1,0 @@
-{"model_name": "rpo", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "True", "mean_estimator": "nobb", "cov_estimator": "nobb", "uncertainty_aversion_estimator": "ceria-stubbs-2006", "model": "rpo"}
