@@ -45,24 +45,24 @@ def timeseries_train_test_split(X, y, train_ratio):
 
     return X_train, X_test, y_train, y_test
 
-def create_rolling_indices(num_timesteps_in, num_timesteps_out, n_timesteps, fix_start):
+def create_rolling_indices(num_timesteps_in, num_timesteps_out, num_timesteps, fix_start):
     
     # generate rolling window indices
     indices = []
-    for i in range(n_timesteps - num_timesteps_out):
+    for i in range(num_timesteps - num_timesteps_out):
 
         if fix_start:
             if i == 0:
                 indices.append((0, (i + num_timesteps_in)))
             else:
-                if indices[-1][1] == (n_timesteps - num_timesteps_out):
+                if indices[-1][1] == (num_timesteps - num_timesteps_out):
                     continue
                 indices.append((0,  indices[-1][1] + num_timesteps_out))
         else:
             if i == 0:
                 indices.append((i, (i + num_timesteps_in)))
             else:
-                if indices[-1][1] == (n_timesteps - num_timesteps_out):
+                if indices[-1][1] == (num_timesteps - num_timesteps_out):
                     continue
                 indices.append((indices[-1][0] + num_timesteps_out,  indices[-1][1] + num_timesteps_out))
 
@@ -80,10 +80,10 @@ def create_online_rolling_window_ts(target, features, num_timesteps_in, num_time
     if features.shape[0] != target.shape[0]:
         raise Exception("Features and target must have the same number of timesteps")
 
-    n_timesteps = features.shape[0]
+    num_timesteps = features.shape[0]
     indices = create_rolling_indices(num_timesteps_in=num_timesteps_in,
                                      num_timesteps_out=num_timesteps_out,
-                                     n_timesteps=n_timesteps,
+                                     num_timesteps=num_timesteps,
                                      fix_start=fix_start)
     
     # use rolling window indices to subset data
@@ -110,10 +110,10 @@ def create_rolling_window_ts(target, features, num_timesteps_in, num_timesteps_o
     if features.shape[0] != target.shape[0]:
         raise Exception("Features and target must have the same number of timesteps")
 
-    n_timesteps = features.shape[0]
+    num_timesteps = features.shape[0]
     indices = create_rolling_indices(num_timesteps_in=num_timesteps_in,
                                      num_timesteps_out=num_timesteps_out,
-                                     n_timesteps=n_timesteps,
+                                     num_timesteps=num_timesteps,
                                      fix_start=fix_start)
     
     # use rolling window indices to subset data
@@ -121,7 +121,7 @@ def create_rolling_window_ts(target, features, num_timesteps_in, num_timesteps_o
     for i, j in indices:
 
         window_features.append(features[i:j, :]) # val \in [i, j)
-        window_target.append(target[(j + num_timesteps_out):(j + num_timesteps_out + 1), :]) # val \in [j + num_timesteps_out, j + num_timesteps_out + 1)
+        window_target.append(target[(j):(j + num_timesteps_out), :]) # val \in [j + num_timesteps_out, j + num_timesteps_out + 1)
 
     if drop_last:
         window_features = window_features[:-1]
