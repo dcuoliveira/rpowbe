@@ -95,20 +95,20 @@ class RBMVO(Estimators, Functionals):
             if len(utilities) == 1:
                 return c*utilities[0]
             else:
-                percentile_idx = int(self.alpha * len(utilities)) - 1
-                return c*utilities[percentile_idx]
+                percentile_idx = int(self.alpha * len(utilities))
+                return c*utilities[percentile_idx - 1]
             
         if long_only:
             constraints = [
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1} # allocate exactly all your assets (no leverage)
             ]
-            bounds = [(0, None) for _ in range(self.K)]
+            bounds = [(0, 1) for _ in range(self.K)] # long-only
 
             w0 = np.random.uniform(0, 1, size=self.K)
         else:
             constraints = [
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
-                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1},  # the weights sum to zero
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # "market-neutral" portfolio
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1}, # allocate exactly all your assets (no leverage)
             ]
             bounds = [(-1, 1) for _ in range(self.K)]
 
