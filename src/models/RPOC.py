@@ -1,8 +1,9 @@
 import torch
 import numpy as np
 import scipy.optimize as opt
-from utils.AutomaticCluster import AutomaticCluster
+from copy import deepcopy
 
+from utils.AutomaticCluster import AutomaticCluster
 from estimators.Estimators import Estimators
 
 class RPOC(Estimators):
@@ -77,7 +78,7 @@ class RPOC(Estimators):
         sorted_results_boot = sorted(results_boot, key = lambda x : x[0],reverse=False)
        
         # get worst model
-        percentile_idx = int(self.alpha * len(self.list_mean_covs)) - 1
+        percentile_idx = int(self.alpha * len(sorted_results_boot))
         _,labels, models,ulabels = sorted_results_boot[percentile_idx]
         
         # now build the predictions array
@@ -89,9 +90,27 @@ class RPOC(Estimators):
         
         wt = torch.tensor(np.array(pred)).T.repeat(num_timesteps_out, 1).T
 
-        return wt
-    
+        # make sure the optimization constraints apply
+        if long_only:
+            # long-only
+            wt = torch.clip(wt, min=0)
+            
+            # no leverage
+            wt = wt / wt.sum()
+        else:
+            # long positions
+            wt_long = deepcopy(wt)
+            wt_long[wt_long < 0] = 0
+            wt_long = wt_long / wt_long.sum()
 
+            # short positions
+            wt_short = deepcopy(wt)
+            wt_short[wt_short >= 0] = 0
+            wt_short = (wt_short / wt_short.sum()).nan_to_num(0) * -1
+
+            # final weights
+            wt = wt_long + wt_short
+        return wt
 
     # clustering using sigNet
     # automatically selects the number of clusters, like in Cucuringu's paper
@@ -117,19 +136,20 @@ class RPOC(Estimators):
         w0 = None
         if long_only:
             constraints = [
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1} # allocate exactly all your assets (no leverage)
             ]
-            bounds = [(0, 1) for _ in range(K)]
+            bounds = [(0, 1) for _ in range(K)] # long-only
 
             w0 = np.random.uniform(0, 1, size=K)
         else:
             constraints = [
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
-                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1},  # the weights sum to zero
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # "market-neutral" portfolio
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1}, # allocate exactly all your assets (no leverage)
             ]
             bounds = [(-1, 1) for _ in range(K)]
 
             w0 = np.random.uniform(-1, 1, size=K)
+
         # define objective
         def objective(weights: torch.Tensor,
                       maximize: bool=True) -> torch.Tensor:
@@ -140,6 +160,6 @@ class RPOC(Estimators):
         
         # perform the optimization
         opt_output = opt.minimize(objective, w0, constraints=constraints, bounds=bounds)
-        #
+        
         return (opt_output)
 
