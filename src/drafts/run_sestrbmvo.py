@@ -5,7 +5,7 @@ import argparse
 from tqdm import tqdm
 from copy import copy
 
-from models.SEstRBMVO import SestRBMVO
+from models.SESTRBMVO import SESTRBMVO
 from data.ETFsLoader import ETFsLoader
 from utils.dataset_utils import create_rolling_window_ts, check_bool
 from loss_functions.SharpeLoss import SharpeLoss
@@ -13,12 +13,11 @@ from utils.conn_data import save_result_in_blocks
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="rbmvo")
+parser.add_argument('-mn', '--model_name', type=str, help='model name to be used for saving the model', default="sestrbmvo")
 parser.add_argument('-nti', '--num_timesteps_in', type=int, help='size of the lookback window for the time series data', default=252 * 1)
 parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the lookforward window to be predicted', default=1)
 parser.add_argument('-lo', '--long_only', type=str, help='consider long only constraint on the optimization', default="True")
-parser.add_argument('-meancove', '--mean_cov_estimator', type=str, help='name of the estimator to be used for the expected returns', default="cbb")
-parser.add_argument('-a', '--alpha', type=float, help='Percentile of the bootstrap disttribution.', default=0.95)
+parser.add_argument('-meancove', '--mean_cov_estimator', type=str, help='name of the estimator to be used for the expected returns', default="sest")
 
 if __name__ == "__main__":
 
@@ -34,11 +33,10 @@ if __name__ == "__main__":
     drop_last = True
     long_only = check_bool(args.long_only)
     mean_cov_estimator = args.mean_cov_estimator
-    alpha = args.alpha
     mean_functional = "means"
     cov_functional = "eigenvalues"
 
-    print("Running script with the following parameters: model_name: {}, long_only: {}, mean_cov_estimator: {}, alpha: {}".format(model_name, long_only, mean_cov_estimator, alpha))
+    print("Running script with the following parameters: model_name: {}, long_only: {}, mean_cov_estimator: {}".format(model_name, long_only, mean_cov_estimator))
 
     # add tag for long only or long-short portfolios
     model_name = "{model_name}_lo".format(model_name=model_name) if long_only else "{model_name}_ls".format(model_name=model_name)
@@ -46,8 +44,8 @@ if __name__ == "__main__":
     # add mean estimator tag to name
     model_name = "{model_name}_{mean_cov_estimator}".format(model_name=model_name, mean_cov_estimator=mean_cov_estimator)
     
-    # add mean estimator tag to name
-    model_name = "{model_name}_{alpha}".format(model_name=model_name, alpha=str(int(alpha*100)))
+    # # add mean estimator tag to name
+    # model_name = "{model_name}_{alpha}".format(model_name=model_name, alpha=str(int(alpha*100)))
 
     args.model_name = model_name
 
@@ -69,7 +67,7 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = SestRBMVO(mean_cov_estimator=mean_cov_estimator, alpha=alpha, mean_functional=mean_functional, cov_functional=cov_functional)
+    model = SESTRBMVO(mean_cov_estimator=mean_cov_estimator, mean_functional=mean_functional, cov_functional=cov_functional)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()
