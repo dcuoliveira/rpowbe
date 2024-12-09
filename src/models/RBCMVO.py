@@ -6,7 +6,7 @@ from copy import deepcopy
 from utils.AutomaticCluster import AutomaticCluster
 from estimators.Estimators import Estimators
 
-class RPOC(Estimators):
+class RBCMVO(Estimators):
     def __init__(self,
                  risk_aversion: float=1,
                  mean_cov_estimator: str="mle",
