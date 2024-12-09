@@ -73,7 +73,7 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = RPOC(risk_aversion=1, mean_cov_estimator=mean_cov_estimator, cluster_method=cluster_method, num_boot=200, alpha=alpha)
+    model = RBCMVO(risk_aversion=1, mean_cov_estimator=mean_cov_estimator, cluster_method=cluster_method, num_boot=200, alpha=alpha)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()
