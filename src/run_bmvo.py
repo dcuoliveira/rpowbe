@@ -5,7 +5,7 @@ import argparse
 from tqdm import tqdm
 from copy import copy
 
-from models.BRPO import BRPO
+from models.BMVO import BMVO
 from data.ETFsLoader import ETFsLoader
 from utils.dataset_utils import create_rolling_window_ts, check_bool
 from loss_functions.SharpeLoss import SharpeLoss
@@ -70,7 +70,7 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = BRPO(mean_cov_estimator=mean_cov_estimator, alpha=alpha, mean_functional=mean_functional, cov_functional=cov_functional)
+    model = BMVO(mean_cov_estimator=mean_cov_estimator, alpha=alpha, mean_functional=mean_functional, cov_functional=cov_functional)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()

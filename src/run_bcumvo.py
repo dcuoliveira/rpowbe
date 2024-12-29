@@ -5,7 +5,7 @@ import argparse
 from tqdm import tqdm
 from copy import copy
 
-from models.DRPOC import DRPOC
+from models.BCUMVO import BCUMVO
 from data.ETFsLoader import ETFsLoader
 from utils.dataset_utils import create_rolling_window_ts, check_bool
 from loss_functions.SharpeLoss import SharpeLoss
@@ -78,7 +78,7 @@ if __name__ == "__main__":
                                                       drop_last=drop_last)
 
     # (1) call model
-    model = DRPOC(risk_aversion=1,mean_cov_estimator=mean_cov_estimator,num_boot = 200, alpha=alpha,min_num_clusters=min_clus,max_num_clusters=max_clus)
+    model = BCUMVO(risk_aversion=1,mean_cov_estimator=mean_cov_estimator,num_boot = 200, alpha=alpha,min_num_clusters=min_clus,max_num_clusters=max_clus)
 
     # (2) loss fucntion
     lossfn = SharpeLoss()

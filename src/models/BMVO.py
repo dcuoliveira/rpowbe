@@ -5,7 +5,7 @@ import scipy.optimize as opt
 from estimators.Estimators import Estimators
 from functionals.Functionals import Functionals
 
-class BRPO(Estimators, Functionals):
+class BMVO(Estimators, Functionals):
     def __init__(self,
                  risk_aversion: float=1,
                  mean_cov_estimator: str="mle",
@@ -89,15 +89,15 @@ class BRPO(Estimators, Functionals):
 
         if long_only:
             constraints = [
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1} # allocate exactly all your assets (no leverage)
             ]
-            bounds = [(0, 1) for _ in range(self.K)]
+            bounds = [(0, 1) for _ in range(self.K)] # long-only
 
             w0 = np.random.uniform(0, 1, size=self.K)
         else:
             constraints = [
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
-                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1},  # the weights sum to zero
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # "market-neutral" portfolio
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1}, # allocate exactly all your assets (no leverage)
             ]
             bounds = [(-1, 1) for _ in range(self.K)]
 

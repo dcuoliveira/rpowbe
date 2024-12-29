@@ -94,21 +94,23 @@ class CMVO(Estimators):
                   long_only: bool=True) -> any:
         K = cov.shape[0]
         w0 = None
+        
         if long_only:
             constraints = [
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}  # the weights sum to one
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1} # allocate exactly all your assets (no leverage)
             ]
-            bounds = [(0, 1) for _ in range(K)]
+            bounds = [(0, 1) for _ in range(K)] # long-only
 
             w0 = np.random.uniform(0, 1, size=K)
         else:
             constraints = [
-                {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # the weights sum to zero
-                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1},  # the weights sum to zero
+                {'type': 'eq', 'fun': lambda x: np.sum(x) - 0},  # "market-neutral" portfolio
+                {'type': 'eq', 'fun': lambda x: np.sum(np.abs(x)) - 1}, # allocate exactly all your assets (no leverage)
             ]
             bounds = [(-1, 1) for _ in range(K)]
 
             w0 = np.random.uniform(-1, 1, size=K)
+
         # define objective
         def objective(weights: torch.Tensor,
                       maximize: bool=True) -> torch.Tensor:

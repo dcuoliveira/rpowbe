@@ -5,7 +5,7 @@ import scipy.optimize as opt
 from estimators.Estimators import Estimators
 from functionals.Functionals import Functionals
 
-class RBMVO(Estimators, Functionals):
+class BUMVO(Estimators, Functionals):
     def __init__(self,
                  risk_aversion: float=1,
                  mean_cov_estimator: str="mle",
