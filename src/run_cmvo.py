@@ -19,7 +19,7 @@ parser.add_argument('-nto', '--num_timesteps_out', type=int, help='size of the l
 parser.add_argument('-lo', '--long_only', type=str, help='consider long only constraint on the optimization', default="True")
 parser.add_argument('-cm', '--cluster_method', type=str, help='method to find optimal k for clustering', default="silhouette")
 parser.add_argument('-meancove', '--mean_cov_estimator', type=str, help='name of the estimator to be used for the expected returns', default="mle", choices=["mle"])
-parser.add_argument('-a', '--alpha', type=float, help='Confidence level for the rank of the estimates.', default=0.95)
+parser.add_argument('-a', '--alpha', type=float, help='Percentile of the bootstrap disttribution.', default=0.95)
 
 # INSTALL SIGNET: pip install git+https://github.com/alan-turing-institute/SigNet.git
 
