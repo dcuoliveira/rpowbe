@@ -367,16 +367,20 @@ class AutomaticCluster:
 				silh = list()
 				idx_best = -1
 				best_sil = -1
-				for	i in range(1,w.shape[0]):
+				for	i in range(1, w.shape[0]):
 					result = sl.KMeans(n_clusters = i + 1).fit(v)
 					wcss.append(result)
 					avg_sil = silhouette_score(v,result.labels_)
 					silh.append(avg_sil)
 					if avg_sil > best_sil:
-						best_sil =avg_sil
-						idx_best = i
-				#
-				#print(idx_best + 1)
+						best_sil = avg_sil
+						idx_best = i-1
+
+				try:
+					a = wcss[idx_best].labels_
+				except:
+					a = "error"
+
 				return wcss[idx_best].labels_
 		else:
 			if select_clust_n == "spectral":
