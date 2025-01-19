@@ -1,0 +1,1 @@
+{"model_name": "bucmvo_silhouette_ls_nobb_nobb_25", "num_timesteps_in": 252, "num_timesteps_out": 1, "long_only": "False", "mean_cov_estimator": "nobb", "cluster_method": "silhouette", "alpha": 0.25, "model": "bucmvo"}
